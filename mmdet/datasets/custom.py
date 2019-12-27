@@ -37,7 +37,7 @@ class CustomDataset(Dataset):
                  ann_file,
                  pipeline,
                  data_root=None,
-                 img_prefix='',
+                 img_prefix='',  # eg: 'train/' or data_root + 'train/'
                  seg_prefix=None,
                  proposal_file=None,
                  test_mode=False,
@@ -62,6 +62,9 @@ class CustomDataset(Dataset):
                     or osp.isabs(self.proposal_file)):
                 self.proposal_file = osp.join(self.data_root,
                                               self.proposal_file)
+
+        # print(self.ann_file, self.img_prefix)
+
         # load annotations (and proposals)
         self.img_infos = self.load_annotations(self.ann_file)
         if self.proposal_file is not None:
@@ -141,6 +144,11 @@ class CustomDataset(Dataset):
         if self.proposals is not None:
             results['proposals'] = self.proposals[idx]
         self.pre_pipeline(results)
+
+        # from mmdet.apis import get_root_logger
+        # logger = get_root_logger()
+        # logger.info('results: {}'.format(results))
+
         return self.pipeline(results)
 
     def prepare_test_img(self, idx):
