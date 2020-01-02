@@ -2,6 +2,7 @@ import numpy as np
 
 from .custom import CustomDataset
 from .registry import DATASETS
+import mmcv
 
 
 @DATASETS.register_module
@@ -9,8 +10,16 @@ class KittiDataset(CustomDataset):
 
     CLASSES = ('Car', 'Cyclist', 'Pedestrian')
 
-    # def load_annotations(self, ann_file):
-    #     return mmcv.load(ann_file)
+    def load_annotations(self, ann_file):
+        ann = mmcv.load(ann_file)
+        # self.img_ids = list(range(len(ann)))
+        # self.cat_ids = list(range(3))
+        # self.cat2label = {
+        #     cat_id: i + 1
+        #     for i, cat_id in enumerate(self.cat_ids)
+        # }
+        return ann
+
 
     # def get_ann_info(self, idx):
     #     return self.img_infos[idx]['ann']

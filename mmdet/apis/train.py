@@ -258,7 +258,10 @@ def _dist_train(model,
                 CocoDistEvalRecallHook(val_dataset_cfg, **eval_cfg))
         else:
             dataset_type = DATASETS.get(val_dataset_cfg.type)
-            if issubclass(dataset_type, datasets.CocoDataset):
+            if issubclass(dataset_type, datasets.CocoDataset):  # or cfg.data.val.type == 'KittiDataset':
+                from mmdet.apis import get_root_logger
+                logger = get_root_logger()
+                logger.info('Using CocoDistEvalmAPHook.')
                 runner.register_hook(
                     CocoDistEvalmAPHook(val_dataset_cfg, **eval_cfg))
             else:

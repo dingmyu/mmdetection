@@ -22,7 +22,7 @@ model = dict(
         relu_before_extra_convs=True),
     bbox_head=dict(
         type='FCOSHead',
-        num_classes=81,
+        num_classes=4,
         in_channels=256,
         stacked_convs=4,
         feat_channels=256,
@@ -63,7 +63,7 @@ train_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='Resize',
-        img_scale=[(1333, 640), (1333, 800)],
+        img_scale=[(1760, 512)],
         multiscale_mode='value',
         keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -76,7 +76,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(1760, 512),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -108,7 +108,7 @@ data = dict(
 # optimizer
 optimizer = dict(
     type='SGD',
-    lr=0.01,
+    lr=0.001,
     momentum=0.9,
     weight_decay=0.0001,
     paramwise_options=dict(bias_lr_mult=2., bias_decay_mult=0.))
@@ -123,14 +123,14 @@ lr_config = dict(
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=5,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 24
+total_epochs = 50
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'
 work_dir = './work_dirs/kitti_fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x'
