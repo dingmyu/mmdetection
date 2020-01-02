@@ -79,7 +79,7 @@ def read_kitti_cal(calfile):
     return p2
 
 
-def read_kitti_label(file, dataset):
+def read_kitti_label(file, image_id, bbox_id):
     """
     Reads the kitti label file from disc.
     Args:
@@ -88,6 +88,7 @@ def read_kitti_label(file, dataset):
     """
 
     gts = []
+    bboxes = []
 
     text_file = open(file, 'r')
 
@@ -116,21 +117,10 @@ def read_kitti_label(file, dataset):
                           + '(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s*((fpat)?)\n')
                          .replace('fpat', '[-+]?\d*\.\d+|[-+]?\d+'))
 
-    bboxes = []
-    bboxes_ignore = []
-    labels = []
-    labels_ignore = []
-
     TYPE2LABEL = dict(
-        Background=0,
         Car=1,
         Cyclist=2,
         Pedestrian=3,
-        # Van=4,
-        # Person_sitting=5
-        # Truck = 6
-        # Tram = 7
-        # Misc = 8
     )
 
     for line in text_file:
@@ -142,8 +132,6 @@ def read_kitti_label(file, dataset):
         if parsed is not None:
 
             obj = edict()
-
-            ign = False
 
             label_type = parsed.group(1)  # type
             trunc = float(parsed.group(2))
@@ -173,36 +161,25 @@ def read_kitti_label(file, dataset):
 
             gts.append(obj)
 
+            bbox = dict()
+
             if label_type in TYPE2LABEL:
-                bboxes.append(obj.bbox_2d)
-                labels.append(TYPE2LABEL[label_type])
-            if label_type == 'DontCare':
-                bboxes_ignore.append(obj.bbox_2d)
-                labels_ignore.append(0)
-
-            if dataset == 'train':
-                if bboxes_ignore:
-                    ann = dict(
-                        bboxes=np.array(bboxes, dtype=np.float32),
-                        labels=np.array(labels, dtype=np.int64),
-                        bboxes_ignore=np.array(bboxes_ignore, dtype=np.float32),
-                        #                     labels_ignore=np.array(labels_ignore, dtype=np.int64)
-                    )
-                else:
-                    ann = dict(
-                        bboxes=np.array(bboxes, dtype=np.float32),
-                        labels=np.array(labels, dtype=np.int64),
-                        bboxes_ignore=np.zeros((0, 4), dtype=np.float32),
-                        #                     labels_ignore=np.zeros((0, ))
-                    )
+                bbox['iscrowd'] = 0
+                bbox['category_id'] = TYPE2LABEL[label_type]
+            elif label_type == 'DontCare':
+                bbox['iscrowd'] = 1
+                bbox['category_id'] = 0
             else:
-                ann = dict(
-                    bboxes=np.array(bboxes, dtype=np.float32),
-                    labels=np.array(labels, dtype=np.int64),
-                )
+                continue
 
-    return gts, ann
+            bbox['image_id'] = image_id
+            bbox['id'] = bbox_id
+            bbox_id += 1
+            bbox['bbox'] = [x, y, width, height]
+            # bbox['area'] = 666  # Useless
+            bboxes.append(bbox)
 
+    return bbox_id, bboxes
 
 
 kitti_raw = dict()
@@ -210,14 +187,27 @@ kitti_raw['base'] = os.path.join('/mnt/lustre/dingmingyu/Research/M3D-RPN/data/'
 kitti_raw['calib'] = os.path.join(kitti_raw['base'], 'training', 'calib')
 kitti_raw['img'] = os.path.join(kitti_raw['base'], 'training', 'image_2')
 kitti_raw['label'] = os.path.join(kitti_raw['base'], 'training', 'label_2')
-kitti_raw['pre'] = os.path.join(kitti_raw['base'], 'training', 'prev_2')
+# kitti_raw['pre'] = os.path.join(kitti_raw['base'], 'training', 'prev_2')
 
 train_file = '/mnt/lustre/dingmingyu/Research/M3D-RPN/data/kitti_split1/train.txt'
 val_file = '/mnt/lustre/dingmingyu/Research/M3D-RPN/data/kitti_split1/val.txt'
-train_list = []
-val_list = []
 
+TYPE2LABEL = dict(
+    Car=1,
+    Cyclist=2,
+    Pedestrian=3,
+)
+
+bbox_id = 0
 for item in ['train', 'val']:
+    train_json = dict()
+    train_json['categories'] = []
+    train_json['images'] = []
+    train_json['annotations'] = []
+
+    for key, value in TYPE2LABEL.items():
+        train_json['categories'].append(dict(supercategory='KITTI', id=value, name=key))
+
     if item == 'train':
         text_file = open(train_file, 'r')
     else:
@@ -231,20 +221,24 @@ for item in ['train', 'val']:
             id = str(parsed[0])
 
             file_info = dict()
-            file_info['filename'] = os.path.join(kitti_raw['img'], id + '.png')
-            file_info['calibname'] = os.path.join(kitti_raw['calib'], id + '.txt')
-            file_info['labelname'] = os.path.join(kitti_raw['label'], id + '.txt')
+            file_info['file_name'] = os.path.join(kitti_raw['img'], id + '.png')
+            #             file_info['calibname'] = os.path.join(kitti_raw['calib'], id + '.txt')
 
-            file_shape = cv2.imread(file_info['filename']).shape[:2][::-1]
+            file_shape = cv2.imread(file_info['file_name']).shape[:2][::-1]
             file_info['width'] = file_shape[0]
             file_info['height'] = file_shape[1]
-            file_info['calib'] = read_kitti_cal(file_info['calibname'])
-            file_info['label'], file_info['ann'] = read_kitti_label(file_info['labelname'], item)
-        if item == 'train':
-            train_list.append(file_info)
-        else:
-            val_list.append(file_info)
-# output = open(os.path.join(os.getcwd(), 'train.pkl'), 'wb')
-# pickle.dump(train_list, output)
-mmcv.dump(train_list, os.path.join(os.getcwd(), 'train.pkl'))
-mmcv.dump(val_list, os.path.join(os.getcwd(), 'val.pkl'))
+
+            #             file_info['calib'] = read_kitti_cal(file_info['calibname'])
+            file_info['id'] = int(id)
+
+            bbox_id, label_info = read_kitti_label(os.path.join(kitti_raw['label'], id + '.txt'), file_info['id'],
+                                                   bbox_id)
+
+            train_json['images'].append(file_info)
+            train_json['annotations'].extend(label_info)
+    if item == 'train':
+        with open('train.json', 'w') as f:
+            json.dump(train_json, f)
+    else:
+        with open('val.json', 'w') as f:
+            json.dump(train_json, f)
