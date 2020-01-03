@@ -1,8 +1,10 @@
+import re
 import os
 import os.path as osp
 
 import mmcv
 import numpy as np
+import subprocess
 import torch
 import torch.distributed as dist
 from mmcv.parallel import collate, scatter
@@ -112,6 +114,109 @@ class DistEvalmAPHook(DistEvalHook):
         runner.log_buffer.output['mAP'] = mean_ap
         runner.log_buffer.ready = True
 
+def parse_kitti_result(respath, mode='new'):
+
+    text_file = open(respath, 'r')
+
+    acc = np.zeros([3, 41], dtype=float)
+
+    lind = 0
+    for line in text_file:
+
+        parsed = re.findall('([\d]+\.?[\d]*)', line)
+
+        for i, num in enumerate(parsed):
+            acc[lind, i] = float(num)
+
+        lind += 1
+
+    text_file.close()
+
+    if mode == 'old':
+        easy = np.mean(acc[0, 0:41:4])
+        mod = np.mean(acc[1, 0:41:4])
+        hard = np.mean(acc[2, 0:41:4])
+    else:
+        easy = np.mean(acc[0, 1:41:1])
+        mod = np.mean(acc[1, 1:41:1])
+        hard = np.mean(acc[2, 1:41:1])
+
+    return easy, mod, hard
+
+
+class KITTIDistEvalmAPHook(DistEvalHook):
+
+    def evaluate(self, runner, results):
+        from mmdet.apis import get_root_logger
+        logger = get_root_logger()
+        ds_name = self.dataset.CLASSES
+        mmcv.mkdir_or_exist(osp.join(runner.work_dir, 'temp_results', 'data'))
+        for i in range(len(self.dataset)):
+            # file_name = self.dataset.get_file_name(i).split('/')[-1].replace('png', 'txt')
+            f = open(osp.join(runner.work_dir, 'temp_results', 'data', '%06d.txt' % i), 'w')
+            for category, result in enumerate(results[i]):
+                if result.any():
+                    for item in result:
+                        print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], 0,0,0,0,0,0,0, item[4], file=f)
+            f.close()
+
+        script = os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'devkit', 'cpp', 'evaluate_object')
+        with open(os.devnull, 'w') as devnull:
+            out = subprocess.check_output([script, osp.join(runner.work_dir, 'temp_results')], stderr=devnull)
+
+        results_path = osp.join(runner.work_dir, 'temp_results', 'data')
+        test_iter = 0
+
+        for lbl in ['Car', 'Cyclist', 'Pedestrian']:
+
+            lbl = lbl.lower()
+
+            respath_2d = os.path.join(results_path.replace('/data', ''), 'stats_{}_detection.txt'.format(lbl))
+            respath_gr = os.path.join(results_path.replace('/data', ''), 'stats_{}_detection_ground.txt'.format(lbl))
+            respath_3d = os.path.join(results_path.replace('/data', ''), 'stats_{}_detection_3d.txt'.format(lbl))
+
+            if os.path.exists(respath_2d):
+                easy, mod, hard = parse_kitti_result(respath_2d, mode='old')
+
+                print_str = 'OLD_test_iter {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                                                                                                           easy, mod, hard)
+                logger.info(print_str)
+
+                easy, mod, hard = parse_kitti_result(respath_2d)
+
+                print_str = 'NEW_test_iter {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                                                                                                           easy, mod, hard)
+                logger.info(print_str)
+
+            if os.path.exists(respath_gr):
+                easy, mod, hard = parse_kitti_result(respath_gr, mode='old')
+
+                print_str = 'OLD_test_iter {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                                                                                                           easy, mod, hard)
+
+                logger.info(print_str)
+
+                easy, mod, hard = parse_kitti_result(respath_gr)
+
+                print_str = 'NEW_test_iter {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                                                                                                           easy, mod, hard)
+
+                logger.info(print_str)
+
+            if os.path.exists(respath_3d):
+                easy, mod, hard = parse_kitti_result(respath_3d, mode='old')
+
+                print_str = 'OLD_test_iter {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                                                                                                           easy, mod, hard)
+
+                logger.info(print_str)
+
+                easy, mod, hard = parse_kitti_result(respath_3d)
+
+                print_str = 'NEW_test_iter {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                                                                                                           easy, mod, hard)
+
+                logger.info(print_str)
 
 class CocoDistEvalRecallHook(DistEvalHook):
 

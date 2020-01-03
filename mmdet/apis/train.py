@@ -11,7 +11,7 @@ from mmcv.runner import (DistSamplerSeedHook, Runner, get_dist_info,
                          obj_from_dict)
 
 from mmdet import datasets
-from mmdet.core import (CocoDistEvalmAPHook, CocoDistEvalRecallHook,
+from mmdet.core import (CocoDistEvalmAPHook, CocoDistEvalRecallHook, KITTIDistEvalmAPHook,
                         DistEvalmAPHook, DistOptimizerHook, Fp16OptimizerHook)
 from mmdet.datasets import DATASETS, build_dataloader
 from mmdet.models import RPN
@@ -258,7 +258,10 @@ def _dist_train(model,
                 CocoDistEvalRecallHook(val_dataset_cfg, **eval_cfg))
         else:
             dataset_type = DATASETS.get(val_dataset_cfg.type)
-            if issubclass(dataset_type, datasets.CocoDataset):  # or cfg.data.val.type == 'KittiDataset':
+            if cfg.data.val.type in ['KittiDataset', 'KittiInCocoDataset']:
+                runner.register_hook(
+                    KITTIDistEvalmAPHook(val_dataset_cfg, **eval_cfg))
+            elif issubclass(dataset_type, datasets.CocoDataset):
                 from mmdet.apis import get_root_logger
                 logger = get_root_logger()
                 logger.info('Using CocoDistEvalmAPHook.')

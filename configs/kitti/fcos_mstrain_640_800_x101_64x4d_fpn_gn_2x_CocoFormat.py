@@ -54,8 +54,8 @@ test_cfg = dict(
     nms=dict(type='nms', iou_thr=0.5),
     max_per_img=100)
 # dataset settings
-dataset_type = 'KittiDataset'
-data_root = '/mnt/lustre/dingmingyu/Research/M3D-RPN/data/kitti/'
+dataset_type = 'KittiInCocoDataset'
+data_root = 'kitti_tools/split1/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -92,17 +92,17 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'train.pkl',
+        ann_file=data_root + 'train.json',
         img_prefix=None,
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'val.pkl',
+        ann_file=data_root + 'val.json',
         img_prefix=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'val.pkl',
+        ann_file=data_root + 'val.json',
         img_prefix=None,
         pipeline=test_pipeline))
 # optimizer
@@ -120,7 +120,8 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[16, 22])
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=4)
+evaluation = dict(interval=4)
 # yapf:disable
 log_config = dict(
     interval=5,
@@ -130,10 +131,10 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 50
-dist_params = dict(backend='nccl', port=9899)
+total_epochs = 24
+dist_params = dict(backend='nccl', port=9898)
 log_level = 'INFO'
-work_dir = './work_dirs/kitti_fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x'
+work_dir = './work_dirs_kitti/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x_CocoFormat'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

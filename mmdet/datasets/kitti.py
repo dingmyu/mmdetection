@@ -34,3 +34,5 @@ class KittiDataset(CustomDataset):
                 valid_inds.append(i)
         return valid_inds
 
+    def get_file_name(self, idx):
+        return self.img_infos[idx]['filename']

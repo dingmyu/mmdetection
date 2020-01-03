@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
+set -x
 
-# single GPU
-srun -p ad_lidar --gres=gpu:1 -n1 --kill-on-bad-exit=1 python tools/test.py configs/fcos/fcos_mstrain_640_800_r101_caffe_fpn_gn_2x_4gpu.py \
-  work_dirs/fcos_mstrain_640_800_r101_caffe_fpn_gn_2x_4gpu/epoch_24.pth --out work_dirs/fcos_mstrain_640_800_r101_caffe_fpn_gn_2x_4gpu/result.pkl  --eval bbox
-
-# multi GPUs
-#srun -p ad_lidar --gres=gpu:8 -n1 --kill-on-bad-exit=1 ./tools/dist_test.sh configs/fcos/fcos_mstrain_640_800_r101_caffe_fpn_gn_2x_4gpu.py \
-#  work_dirs/fcos_mstrain_640_800_r101_caffe_fpn_gn_2x_4gpu/epoch_24.pth 4 --out work_dirs/fcos_mstrain_640_800_r101_caffe_fpn_gn_2x_4gpu/result_multi.pkl --eval bbox
+srun -p ad_lidar --gres=gpu:4 --ntasks=4 --ntasks-per-node=4 --cpus-per-task=5 --kill-on-bad-exit=1 python -u tools/test.py \
+  configs/kitti/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x.py work_dirs_kitti/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x/latest.pth \
+  --out work_dirs_kitti/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x/result.pkl --launcher="slurm"
