@@ -150,10 +150,10 @@ class KITTIDistEvalmAPHook(DistEvalHook):
         from mmdet.apis import get_root_logger
         logger = get_root_logger()
         ds_name = self.dataset.CLASSES
-        mmcv.mkdir_or_exist(osp.join(runner.work_dir, 'temp_results', 'data'))
+        mmcv.mkdir_or_exist(osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)), 'data'))
         for i in range(len(self.dataset)):
             # file_name = self.dataset.get_file_name(i).split('/')[-1].replace('png', 'txt')
-            f = open(osp.join(runner.work_dir, 'temp_results', 'data', '%06d.txt' % i), 'w')
+            f = open(osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)), 'data', '%06d.txt' % i), 'w')
             for category, result in enumerate(results[i]):
                 if result.any():
                     for item in result:
@@ -162,9 +162,9 @@ class KITTIDistEvalmAPHook(DistEvalHook):
 
         script = os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'devkit', 'cpp', 'evaluate_object')
         with open(os.devnull, 'w') as devnull:
-            out = subprocess.check_output([script, osp.join(runner.work_dir, 'temp_results')], stderr=devnull)
+            out = subprocess.check_output([script, osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)))], stderr=devnull)
 
-        results_path = osp.join(runner.work_dir, 'temp_results', 'data')
+        results_path = osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)), 'data')
         test_iter = 0
 
         for lbl in ['Car', 'Cyclist', 'Pedestrian']:
@@ -178,27 +178,27 @@ class KITTIDistEvalmAPHook(DistEvalHook):
             if os.path.exists(respath_2d):
                 easy, mod, hard = parse_kitti_result(respath_2d, mode='old')
 
-                print_str = 'OLD_test_iter {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                print_str = 'R11_test_epoch {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
                                                                                                            easy, mod, hard)
                 logger.info(print_str)
 
                 easy, mod, hard = parse_kitti_result(respath_2d)
 
-                print_str = 'NEW_test_iter {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                print_str = 'R40_test_epoch {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
                                                                                                            easy, mod, hard)
                 logger.info(print_str)
 
             if os.path.exists(respath_gr):
                 easy, mod, hard = parse_kitti_result(respath_gr, mode='old')
 
-                print_str = 'OLD_test_iter {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                print_str = 'R11_test_epoch {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
                                                                                                            easy, mod, hard)
 
                 logger.info(print_str)
 
                 easy, mod, hard = parse_kitti_result(respath_gr)
 
-                print_str = 'NEW_test_iter {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                print_str = 'R40_test_epoch {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
                                                                                                            easy, mod, hard)
 
                 logger.info(print_str)
@@ -206,14 +206,14 @@ class KITTIDistEvalmAPHook(DistEvalHook):
             if os.path.exists(respath_3d):
                 easy, mod, hard = parse_kitti_result(respath_3d, mode='old')
 
-                print_str = 'OLD_test_iter {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                print_str = 'R11_test_epoch {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
                                                                                                            easy, mod, hard)
 
                 logger.info(print_str)
 
                 easy, mod, hard = parse_kitti_result(respath_3d)
 
-                print_str = 'NEW_test_iter {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(test_iter, lbl,
+                print_str = 'R40_test_epoch {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
                                                                                                            easy, mod, hard)
 
                 logger.info(print_str)

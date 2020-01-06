@@ -14,6 +14,8 @@ from mmdet.apis import get_root_logger, set_random_seed, train_detector
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 
+import shutil
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
@@ -80,6 +82,7 @@ def main():
 
     # create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
+    shutil.copyfile(args.config, os.path.join(cfg.work_dir, args.config.split('/')[-1]))
     # init the logger before other steps
     timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
     log_file = osp.join(cfg.work_dir, '{}.log'.format(timestamp))

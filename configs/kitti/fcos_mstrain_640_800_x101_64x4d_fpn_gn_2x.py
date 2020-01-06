@@ -1,4 +1,6 @@
 # model settings
+import datetime
+
 model = dict(
     type='FCOS',
     pretrained='open-mmlab://resnext101_64x4d',
@@ -51,7 +53,7 @@ test_cfg = dict(
     nms_pre=1000,
     min_bbox_size=0,
     score_thr=0.05,
-    nms=dict(type='nms', iou_thr=0.5),
+    nms=dict(type='nms', iou_thr=0.4),
     max_per_img=100)
 # dataset settings
 dataset_type = 'KittiDataset'
@@ -108,7 +110,7 @@ data = dict(
 # optimizer
 optimizer = dict(
     type='SGD',
-    lr=0.001,
+    lr=0.002,
     momentum=0.9,
     weight_decay=0.0001,
     paramwise_options=dict(bias_lr_mult=2., bias_decay_mult=0.))
@@ -120,11 +122,9 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[16, 22])
-checkpoint_config = dict(interval=4)
-evaluation = dict(interval=4)
 # yapf:disable
 log_config = dict(
-    interval=5,
+    interval=10,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
@@ -132,9 +132,13 @@ log_config = dict(
 # yapf:enable
 # runtime settings
 total_epochs = 24
+checkpoint_config = dict(interval=4)
+evaluation = dict(interval=4)
+workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'
-work_dir = './work_dirs_kitti/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x'
+config_file_name = './output/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x/'
+alias = '_'.join(['BASELINE', 'lr', str(optimizer['lr']), 'nms', str(test_cfg['nms']['iou_thr']), 'epoch', str(total_epochs)])
+work_dir = config_file_name + datetime.datetime.now().strftime("%Y.%m.%d-%H:%M:%S").replace('.', '_').replace(':', '_').replace('-', '_') + '_' + alias
 load_from = None
 resume_from = None
-workflow = [('train', 1)]
