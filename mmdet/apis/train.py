@@ -226,7 +226,12 @@ def _dist_train(model,
             ds, cfg.data.imgs_per_gpu, cfg.data.workers_per_gpu, dist=True)
         for ds in dataset
     ]
-    # put model on gpus
+    # for index, item in enumerate(data_loaders):
+    #     a = iter(item)
+    #     print('~~~', index, a, next(a))
+    #     break
+
+    # print(model)
     model = MMDistributedDataParallel(model.cuda())
 
     # build runner

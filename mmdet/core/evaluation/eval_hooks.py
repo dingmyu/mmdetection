@@ -114,6 +114,7 @@ class DistEvalmAPHook(DistEvalHook):
         runner.log_buffer.output['mAP'] = mean_ap
         runner.log_buffer.ready = True
 
+
 def parse_kitti_result(respath, mode='new'):
 
     text_file = open(respath, 'r')
@@ -123,7 +124,7 @@ def parse_kitti_result(respath, mode='new'):
     lind = 0
     for line in text_file:
 
-        parsed = re.findall('([\d]+\.?[\d]*)', line)
+        parsed = re.findall(r'([\d]+\.?[\d]*)', line)
 
         for i, num in enumerate(parsed):
             acc[lind, i] = float(num)
@@ -148,75 +149,102 @@ class KITTIDistEvalmAPHook(DistEvalHook):
 
     def evaluate(self, runner, results):
         from mmdet.apis import get_root_logger
+        mean_3d = [1.4558165, 1.5661651, 3.3934565, -0.088102, -1.9420172, 1.6677535, 26.494734, -0.07895345]
+        std_3d = [0.39049387, 0.15824589, 1.1481881, 1.7959986, 8.103981, 0.38854262, 16.059843, 1.727274]
         logger = get_root_logger()
         ds_name = self.dataset.CLASSES
-        mmcv.mkdir_or_exist(osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)), 'data'))
+        mmcv.mkdir_or_exist(
+            osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch + 1)), 'data'))
         for i in range(len(self.dataset)):
             # file_name = self.dataset.get_file_name(i).split('/')[-1].replace('png', 'txt')
-            f = open(osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)), 'data', '%06d.txt' % i), 'w')
+            f = open(osp.join(runner.work_dir, 'epoch_{}'.format(
+                str(runner.epoch + 1)), 'data', '%06d.txt' % i), 'w')
             for category, result in enumerate(results[i]):
                 if result.any():
                     for item in result:
-                        print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], 0,0,0,0,0,0,0, item[4], file=f)
+                        if len(item) == 5:
+                            print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], 0, 0, 0, 0, 0, 0, 0, item[4], file=f)
+                        if len(item) == 5 + 8:
+                            for i_3d in range(5, 13):
+                                item[i_3d] = item[i_3d] * std_3d[i_3d - 5] + mean_3d[i_3d - 5]
+                            print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], item[5], item[6], item[7], item[9], item[10], item[11], item[12], item[4], file=f)
             f.close()
 
-        script = os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'devkit', 'cpp', 'evaluate_object')
+        script = os.path.join(
+            os.getcwd(),
+            'kitti_tools',
+            'split1',
+            'devkit',
+            'cpp',
+            'evaluate_object')
         with open(os.devnull, 'w') as devnull:
-            out = subprocess.check_output([script, osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)))], stderr=devnull)
+            out = subprocess.check_output([script, osp.join(
+                runner.work_dir, 'epoch_{}'.format(str(runner.epoch + 1)))], stderr=devnull)
 
-        results_path = osp.join(runner.work_dir, 'epoch_{}'.format(str(runner.epoch+1)), 'data')
+        results_path = osp.join(runner.work_dir, 'epoch_{}'.format(
+            str(runner.epoch + 1)), 'data')
         test_iter = 0
 
         for lbl in ['Car', 'Cyclist', 'Pedestrian']:
 
             lbl = lbl.lower()
 
-            respath_2d = os.path.join(results_path.replace('/data', ''), 'stats_{}_detection.txt'.format(lbl))
-            respath_gr = os.path.join(results_path.replace('/data', ''), 'stats_{}_detection_ground.txt'.format(lbl))
-            respath_3d = os.path.join(results_path.replace('/data', ''), 'stats_{}_detection_3d.txt'.format(lbl))
+            respath_2d = os.path.join(results_path.replace(
+                '/data', ''), 'stats_{}_detection.txt'.format(lbl))
+            respath_gr = os.path.join(
+                results_path.replace(
+                    '/data',
+                    ''),
+                'stats_{}_detection_ground.txt'.format(lbl))
+            respath_3d = os.path.join(
+                results_path.replace(
+                    '/data',
+                    ''),
+                'stats_{}_detection_3d.txt'.format(lbl))
 
             if os.path.exists(respath_2d):
                 easy, mod, hard = parse_kitti_result(respath_2d, mode='old')
 
-                print_str = 'R11_test_epoch {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
-                                                                                                           easy, mod, hard)
+                print_str = 'R11_test_epoch {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(
+                    runner.epoch + 1, lbl, easy, mod, hard)
                 logger.info(print_str)
 
                 easy, mod, hard = parse_kitti_result(respath_2d)
 
-                print_str = 'R40_test_epoch {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
-                                                                                                           easy, mod, hard)
+                print_str = 'R40_test_epoch {} 2d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(
+                    runner.epoch + 1, lbl, easy, mod, hard)
                 logger.info(print_str)
 
             if os.path.exists(respath_gr):
                 easy, mod, hard = parse_kitti_result(respath_gr, mode='old')
 
-                print_str = 'R11_test_epoch {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
-                                                                                                           easy, mod, hard)
+                print_str = 'R11_test_epoch {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(
+                    runner.epoch + 1, lbl, easy, mod, hard)
 
                 logger.info(print_str)
 
                 easy, mod, hard = parse_kitti_result(respath_gr)
 
-                print_str = 'R40_test_epoch {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
-                                                                                                           easy, mod, hard)
+                print_str = 'R40_test_epoch {} gr {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(
+                    runner.epoch + 1, lbl, easy, mod, hard)
 
                 logger.info(print_str)
 
             if os.path.exists(respath_3d):
                 easy, mod, hard = parse_kitti_result(respath_3d, mode='old')
 
-                print_str = 'R11_test_epoch {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
-                                                                                                           easy, mod, hard)
+                print_str = 'R11_test_epoch {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(
+                    runner.epoch + 1, lbl, easy, mod, hard)
 
                 logger.info(print_str)
 
                 easy, mod, hard = parse_kitti_result(respath_3d)
 
-                print_str = 'R40_test_epoch {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(runner.epoch+1, lbl,
-                                                                                                           easy, mod, hard)
+                print_str = 'R40_test_epoch {} 3d {} --> easy: {:0.4f}, mod: {:0.4f}, hard: {:0.4f}'.format(
+                    runner.epoch + 1, lbl, easy, mod, hard)
 
                 logger.info(print_str)
+
 
 class CocoDistEvalRecallHook(DistEvalHook):
 

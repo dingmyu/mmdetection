@@ -10,6 +10,7 @@ from numpy import random
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from ..registry import PIPELINES
 
+import math
 
 @PIPELINES.register_module
 class Resize(object):
@@ -227,6 +228,18 @@ class RandomFlip(object):
                 'Invalid flipping direction "{}"'.format(direction))
         return flipped
 
+    def bbox_flip_3d(self, bboxes, direction):
+        assert bboxes.shape[-1] % 8 == 0
+        flipped = bboxes.copy()
+        if direction == 'horizontal':
+            flipped[..., 3::8] = math.pi - bboxes[..., 3::8]  # TODO: -math.pi
+            flipped[..., 7::8] = math.pi - bboxes[..., 7::8]
+            flipped[..., 4::8] = - bboxes[..., 4::8]
+        else:
+            raise ValueError(
+                'Invalid flipping direction "{}"'.format(direction))
+        return flipped
+
     def __call__(self, results):
         if 'flip' not in results:
             flip = True if np.random.rand() < self.flip_ratio else False
@@ -242,6 +255,8 @@ class RandomFlip(object):
                 results[key] = self.bbox_flip(results[key],
                                               results['img_shape'],
                                               results['flip_direction'])
+            results['gt_3ds'] = self.bbox_flip_3d(results['gt_3ds'],
+                                          results['flip_direction'])
             # flip masks
             for key in results.get('mask_fields', []):
                 results[key] = [

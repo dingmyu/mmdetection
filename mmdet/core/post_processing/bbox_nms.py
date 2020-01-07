@@ -8,7 +8,8 @@ def multiclass_nms(multi_bboxes,
                    score_thr,
                    nms_cfg,
                    max_num=-1,
-                   score_factors=None):
+                   score_factors=None,
+                   multi_bboxes_3d=None):
     """NMS for multi-class bboxes.
 
     Args:
@@ -28,7 +29,7 @@ def multiclass_nms(multi_bboxes,
             are 0-based.
     """
     num_classes = multi_scores.shape[1]
-    bboxes, labels = [], []
+    bboxes, labels, bboxes_3d = [], [], []
     nms_cfg_ = nms_cfg.copy()
     nms_type = nms_cfg_.pop('type', 'nms')
     nms_op = getattr(nms_wrapper, nms_type)
@@ -45,22 +46,38 @@ def multiclass_nms(multi_bboxes,
         if score_factors is not None:
             _scores *= score_factors[cls_inds]
         cls_dets = torch.cat([_bboxes, _scores[:, None]], dim=1)
-        cls_dets, _ = nms_op(cls_dets, **nms_cfg_)
+        cls_dets, useful_inds = nms_op(cls_dets, **nms_cfg_)
+        if multi_bboxes_3d is not None:
+            if multi_bboxes_3d.shape[1] == 8:
+                _bboxes_3d = multi_bboxes_3d[cls_inds, :]
+            else:
+                _bboxes_3d = multi_bboxes_3d[cls_inds, i * 8:(i + 1) * 8]
+            cls_dets_3d = _bboxes_3d[useful_inds, :]
         cls_labels = multi_bboxes.new_full((cls_dets.shape[0], ),
                                            i - 1,
                                            dtype=torch.long)
         bboxes.append(cls_dets)
         labels.append(cls_labels)
+        if multi_bboxes_3d is not None:
+            bboxes_3d.append(cls_dets_3d)
     if bboxes:
         bboxes = torch.cat(bboxes)
         labels = torch.cat(labels)
+        if multi_bboxes_3d is not None:
+            bboxes_3d = torch.cat(bboxes_3d)
         if bboxes.shape[0] > max_num:
             _, inds = bboxes[:, -1].sort(descending=True)
             inds = inds[:max_num]
             bboxes = bboxes[inds]
             labels = labels[inds]
+            if multi_bboxes_3d is not None:
+                bboxes_3d = bboxes_3d[inds]
     else:
         bboxes = multi_bboxes.new_zeros((0, 5))
         labels = multi_bboxes.new_zeros((0, ), dtype=torch.long)
-
-    return bboxes, labels
+        if multi_bboxes_3d is not None:
+            bboxes_3d = multi_bboxes_3d.new_zeros((0, 5))
+    if multi_bboxes_3d is not None:
+        return bboxes, bboxes_3d, labels
+    else:
+        return bboxes, labels
