@@ -138,7 +138,7 @@ workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'
 config_file_name = './output/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x/'
-alias = '_'.join(['BASELINE', 'lr', str(optimizer['lr']), 'nms', str(test_cfg['nms']['iou_thr']), 'epoch', str(total_epochs)])
+alias = '_'.join(['2D_FPN', 'lr', str(optimizer['lr']), 'nms', str(test_cfg['nms']['iou_thr']), 'epoch', str(total_epochs)])
 work_dir = config_file_name + datetime.datetime.now().strftime("%Y.%m.%d-%H:%M:%S").replace('.', '_').replace(':', '_').replace('-', '_') + '_' + alias
 load_from = None
 resume_from = None

@@ -121,6 +121,7 @@ def main():
         distributed=distributed,
         validate=args.validate,
         timestamp=timestamp)
+    print(cfg.work_dir)
 
 
 if __name__ == '__main__':
