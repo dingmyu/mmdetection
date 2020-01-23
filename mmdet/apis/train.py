@@ -231,7 +231,7 @@ def _dist_train(model,
     #     print('~~~', index, a, next(a))
     #     break
 
-    # print(model)
+    print(model)
     model = MMDistributedDataParallel(model.cuda())
 
     # build runner

@@ -255,8 +255,8 @@ class RandomFlip(object):
                 results[key] = self.bbox_flip(results[key],
                                               results['img_shape'],
                                               results['flip_direction'])
-            results['gt_3ds'] = self.bbox_flip_3d(results['gt_3ds'],
-                                          results['flip_direction'])
+            # results['gt_3ds'] = self.bbox_flip_3d(results['gt_3ds'],
+            #                               results['flip_direction'])
             # flip masks
             for key in results.get('mask_fields', []):
                 results[key] = [

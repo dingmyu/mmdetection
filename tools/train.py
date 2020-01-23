@@ -20,6 +20,7 @@ import shutil
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('config', help='train config file path')
+    parser.add_argument('--timestamp', help='timestamp')
     parser.add_argument('--work_dir', help='the dir to save logs and models')
     parser.add_argument(
         '--resume_from', help='the checkpoint file to resume from')
@@ -59,6 +60,10 @@ def main():
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
+    timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+    if args.timestamp is not None:
+        timestamp = args.timestamp
+    cfg.work_dir = './output/' + args.config.split('/')[-1].split('.')[0] + '/' + timestamp + '_' + cfg.alias
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -84,7 +89,6 @@ def main():
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     shutil.copyfile(args.config, os.path.join(cfg.work_dir, args.config.split('/')[-1]))
     # init the logger before other steps
-    timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
     log_file = osp.join(cfg.work_dir, '{}.log'.format(timestamp))
     logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)
 

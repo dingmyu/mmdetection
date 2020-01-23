@@ -20,17 +20,24 @@ from mmdet.apis import init_detector, inference_detector, show_result
 import mmcv
 import cv2
 
-config_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x/BASELINE_lr_0.002_nms_0.4_epoch_24_2020_01_06_17_12_26/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x.py'
-# download the checkpoint from model zoo and put it in `checkpoints/`
-checkpoint_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_mstrain_640_800_x101_64x4d_fpn_gn_2x/BASELINE_lr_0.002_nms_0.4_epoch_24_2020_01_06_17_12_26/latest.pth'
+config_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_x101_64x4d_gn/20200120_150759_2D_baseline_lr_0.002_nms_0.4_epoch_24/fcos_x101_64x4d_gn.py'
+checkpoint_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_x101_64x4d_gn/20200120_150759_2D_baseline_lr_0.002_nms_0.4_epoch_24/latest.pth'
+# config_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/faster_rcnn_x101_64x4d_fpn_1x/2020_01_10_10_59_40_2D_FPN_lr_0.02_nms_0.5_epoch_24/faster_rcnn_x101_64x4d_fpn_1x.py'
+# checkpoint_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/faster_rcnn_x101_64x4d_fpn_1x/2020_01_10_10_59_40_2D_FPN_lr_0.02_nms_0.5_epoch_24/latest.pth'
 
 # build the model from a config file and a checkpoint file
 model = init_detector(config_file, checkpoint_file, device='cuda:0')
 
 # test a single image
-for i in range(7000):
-    img = 'data/kitti/testing/image_2/%06d.png' % i
+f = open('kitti_tools/split1/val.txt').readlines()
+for i, line in enumerate(f):
+    if i > 200:
+        break
+    if i % 10 == 0:
+        print(i)
+    line = int(line.strip())
+    img = 'data/kitti/training/image_2/%06d.png' % line
     result = inference_detector(model, img)
     img = show_result(
         img, result, model.CLASSES, score_thr=0.3, show=False)
-    cv2.imwrite('output/visualization/%06d.png' % i, img)
+    cv2.imwrite('output/visualization/2d_s16/%06d.png' % line, img)
