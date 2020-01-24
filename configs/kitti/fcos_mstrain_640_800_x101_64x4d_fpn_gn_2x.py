@@ -1,6 +1,8 @@
 # model settings
 import datetime
 
+INF = 1e8
+
 model = dict(
     type='FCOS',
     pretrained='open-mmlab://resnext101_64x4d',
@@ -29,6 +31,8 @@ model = dict(
         stacked_convs=4,
         feat_channels=256,
         strides=[8, 16, 32, 64, 128],
+        regress_ranges=((-1, 100), (100, 200), (200, 400), (400, 800),
+                        (800, INF)),
         loss_cls=dict(
             type='FocalLoss',
             use_sigmoid=True,

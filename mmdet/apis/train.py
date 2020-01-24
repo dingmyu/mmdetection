@@ -231,7 +231,9 @@ def _dist_train(model,
     #     print('~~~', index, a, next(a))
     #     break
 
-    print(model)
+    from mmdet.apis import get_root_logger
+    logger = get_root_logger()
+    logger.info(model)
     model = MMDistributedDataParallel(model.cuda())
 
     # build runner
@@ -267,8 +269,6 @@ def _dist_train(model,
                 runner.register_hook(
                     KITTIDistEvalmAPHook(val_dataset_cfg, **eval_cfg))
             elif issubclass(dataset_type, datasets.CocoDataset):
-                from mmdet.apis import get_root_logger
-                logger = get_root_logger()
                 logger.info('Using CocoDistEvalmAPHook.')
                 runner.register_hook(
                     CocoDistEvalmAPHook(val_dataset_cfg, **eval_cfg))

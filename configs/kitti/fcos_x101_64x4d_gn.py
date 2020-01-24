@@ -6,7 +6,7 @@ model = dict(
     pretrained='open-mmlab://resnext101_64x4d',
     backbone=dict(
         type='Dilated_ResNeXt',
-        depth=50,
+        depth=101,
         groups=64,
         base_width=4,
         num_stages=4,
@@ -111,18 +111,18 @@ data = dict(
 # optimizer
 optimizer = dict(
     type='SGD',
-    lr=0.002,
+    lr=0.01,
     momentum=0.9,
     weight_decay=0.0001,
     paramwise_options=dict(bias_lr_mult=2., bias_decay_mult=0.))
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
-    policy='step',
-    warmup='constant',
-    warmup_iters=500,
-    warmup_ratio=1.0 / 3,
-    step=[16, 22])
+    policy='onecycle',)
+    # warmup='constant',
+    # warmup_iters=500,
+    # warmup_ratio=1.0 / 3,
+    # step=[16, 22])
 # yapf:disable
 log_config = dict(
     interval=10,
@@ -132,7 +132,7 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 24
+total_epochs = 50
 checkpoint_config = dict(interval=4)
 evaluation = dict(interval=1)
 workflow = [('train', 1)]

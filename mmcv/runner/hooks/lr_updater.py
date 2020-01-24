@@ -3,7 +3,7 @@ from __future__ import division
 from math import cos, pi
 
 from .hook import Hook
-
+from .lr import OneCycleLR
 
 class LrUpdaterHook(Hook):
 
@@ -182,3 +182,89 @@ class CosineLrUpdaterHook(LrUpdaterHook):
             max_progress = runner.max_iters
         return self.target_lr + 0.5 * (base_lr - self.target_lr) * \
             (1 + cos(pi * (progress / max_progress)))
+
+
+
+class OnecycleLrUpdaterHook(Hook):
+
+    def __init__(self,
+                 by_epoch=False,
+                 warmup=None,
+                 warmup_iters=0,
+                 warmup_ratio=0.1,
+                 **kwargs):
+        # validate the "warmup" argument
+        if warmup is not None:
+            if warmup not in ['constant', 'linear', 'exp']:
+                raise ValueError(
+                    '"{}" is not a supported type for warming up, valid types'
+                    ' are "constant" and "linear"'.format(warmup))
+        if warmup is not None:
+            assert warmup_iters > 0, \
+                '"warmup_iters" must be a positive integer'
+            assert 0 < warmup_ratio <= 1.0, \
+                '"warmup_ratio" must be in range (0,1]'
+
+        self.by_epoch = by_epoch
+        self.warmup = warmup
+        self.warmup_iters = warmup_iters
+        self.warmup_ratio = warmup_ratio
+
+        self.base_lr = []  # initial lr for all param groups
+        self.regular_lr = []  # expected lr if no warming up is performed
+        self.scheduler = None
+
+    def _set_lr(self, runner, lr_groups):
+        for param_group, lr in zip(runner.optimizer.param_groups, lr_groups):
+            param_group['lr'] = lr
+    # def get_lr(self, runner, base_lr):
+    #     raise NotImplementedError
+    #
+    # def get_regular_lr(self, runner):
+    #     return [self.get_lr(runner, _base_lr) for _base_lr in self.base_lr]
+    #
+    def get_warmup_lr(self, cur_iters):
+        if self.warmup == 'constant':
+            warmup_lr = [_lr * self.warmup_ratio for _lr in self.regular_lr]
+        elif self.warmup == 'linear':
+            k = (1 - cur_iters / self.warmup_iters) * (1 - self.warmup_ratio)
+            warmup_lr = [_lr * (1 - k) for _lr in self.regular_lr]
+        elif self.warmup == 'exp':
+            k = self.warmup_ratio**(1 - cur_iters / self.warmup_iters)
+            warmup_lr = [_lr * k for _lr in self.regular_lr]
+        return warmup_lr
+
+    def before_run(self, runner):
+        # NOTE: when resuming from a checkpoint, if 'initial_lr' is not saved,
+        # it will be set according to the optimizer params
+        lr = 0.01
+        for group in runner.optimizer.param_groups:
+            group.setdefault('initial_lr', lr/25)#group['lr'])
+        self.base_lr = [
+            group['initial_lr'] for group in runner.optimizer.param_groups
+        ]
+        self.scheduler = OneCycleLR(runner.optimizer, max_lr=lr, total_steps=232*50)
+
+    def before_train_epoch(self, runner):
+        if not self.by_epoch:
+            return
+        # self.regular_lr = self.get_regular_lr(runner)
+        # self._set_lr(runner, self.regular_lr)
+
+    def before_train_iter(self, runner):
+        cur_iter = runner.iter
+        if not self.by_epoch:
+            if self.warmup is None or cur_iter >= self.warmup_iters:
+                self.scheduler.step()
+                # print(runner.optimizer.param_groups[0]['lr'])
+            else:
+                warmup_lr = self.get_warmup_lr(cur_iter)
+                self._set_lr(runner, warmup_lr)
+        # elif self.by_epoch:
+        #     if self.warmup is None or cur_iter > self.warmup_iters:
+        #         return
+        #     elif cur_iter == self.warmup_iters:
+        #         self._set_lr(runner, self.regular_lr)
+        #     else:
+        #         warmup_lr = self.get_warmup_lr(cur_iter)
+        #         self._set_lr(runner, warmup_lr)
