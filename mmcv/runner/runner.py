@@ -376,7 +376,7 @@ class Runner(object):
             if not hasattr(lr_updater, hook_name):
                 raise ValueError('"{}" does not exist'.format(hook_name))
             hook_cls = getattr(lr_updater, hook_name)
-            self.register_hook(hook_cls(**lr_config))
+            self.register_hook(hook_cls(**lr_config, total_iters = self.total_iters))
         else:
             raise TypeError('"lr_config" must be either a LrUpdaterHook object'
                             ' or dict, not {}'.format(type(lr_config)))
@@ -392,7 +392,9 @@ class Runner(object):
                                 lr_config,
                                 optimizer_config=None,
                                 checkpoint_config=None,
-                                log_config=None):
+                                log_config=None,
+                                total_epochs=None,
+                                iters_per_epoch=None):
         """Register default hooks for training.
 
         Default hooks include:
@@ -403,6 +405,7 @@ class Runner(object):
         - IterTimerHook
         - LoggerHook(s)
         """
+        self.total_iters = total_epochs * iters_per_epoch
         if optimizer_config is None:
             optimizer_config = {}
         if checkpoint_config is None:

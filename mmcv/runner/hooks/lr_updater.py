@@ -192,6 +192,7 @@ class OnecycleLrUpdaterHook(Hook):
                  warmup=None,
                  warmup_iters=0,
                  warmup_ratio=0.1,
+                 total_iters=None,
                  **kwargs):
         # validate the "warmup" argument
         if warmup is not None:
@@ -213,6 +214,7 @@ class OnecycleLrUpdaterHook(Hook):
         self.base_lr = []  # initial lr for all param groups
         self.regular_lr = []  # expected lr if no warming up is performed
         self.scheduler = None
+        self.total_iters = total_iters
 
     def _set_lr(self, runner, lr_groups):
         for param_group, lr in zip(runner.optimizer.param_groups, lr_groups):
@@ -237,13 +239,14 @@ class OnecycleLrUpdaterHook(Hook):
     def before_run(self, runner):
         # NOTE: when resuming from a checkpoint, if 'initial_lr' is not saved,
         # it will be set according to the optimizer params
-        lr = 0.01
+        lr = runner.optimizer.param_groups[0]['lr']
         for group in runner.optimizer.param_groups:
             group.setdefault('initial_lr', lr/25)#group['lr'])
         self.base_lr = [
             group['initial_lr'] for group in runner.optimizer.param_groups
         ]
-        self.scheduler = OneCycleLR(runner.optimizer, max_lr=lr, total_steps=232*50)
+        print(lr, self.total_iters)
+        self.scheduler = OneCycleLR(runner.optimizer, max_lr=lr, total_steps=self.total_iters)  # 232*40
 
     def before_train_epoch(self, runner):
         if not self.by_epoch:

@@ -25,7 +25,7 @@ model = dict(
     #     relu_before_extra_convs=True),
     bbox_head=dict(
         type='FCOSHead2D',
-        num_classes=4,
+        num_classes=81,
         in_channels=2048,
         stacked_convs=1,
         feat_channels=512,
@@ -57,8 +57,8 @@ test_cfg = dict(
     nms=dict(type='nms', iou_thr=0.4),
     max_per_img=100)
 # dataset settings
-dataset_type = 'KittiDataset'
-data_root = 'kitti_tools/split1/'
+dataset_type = 'CocoDataset'
+data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -66,7 +66,7 @@ train_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='Resize',
-        img_scale=[(1696, 512)],
+        img_scale=[(1333, 640), (1333, 800)],
         multiscale_mode='value',
         keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -79,7 +79,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1696, 512),
+        img_scale=(1333, 800),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -91,27 +91,27 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=2,
-    workers_per_gpu=2,
+    imgs_per_gpu=1,
+    workers_per_gpu=1,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'train_3d_test.pkl',
-        img_prefix=None,
+        ann_file=data_root + 'annotations/instances_train2017.json',
+        img_prefix=data_root + 'train2017/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'val_3d_test.pkl',
-        img_prefix=None,
+        ann_file=data_root + 'annotations/instances_val2017.json',
+        img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'val_3d_test.pkl',
-        img_prefix=None,
+        ann_file=data_root + 'annotations/instances_val2017.json',
+        img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(
     type='SGD',
-    lr=0.005,
+    lr=0.001,
     momentum=0.9,
     weight_decay=0.0001,
     paramwise_options=dict(bias_lr_mult=2., bias_decay_mult=0.))
@@ -125,16 +125,16 @@ lr_config = dict(
     # step=[16, 22])
 # yapf:disable
 log_config = dict(
-    interval=10,
+    interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 40
+total_epochs = 12
 checkpoint_config = dict(interval=4)
-evaluation = dict(interval=4)
+evaluation = dict(interval=1)
 workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'

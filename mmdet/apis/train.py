@@ -253,7 +253,7 @@ def _dist_train(model,
 
     # register hooks
     runner.register_training_hooks(cfg.lr_config, optimizer_config,
-                                   cfg.checkpoint_config, cfg.log_config)
+                                   cfg.checkpoint_config, cfg.log_config, cfg.total_epochs, len(data_loaders[0]))
     runner.register_hook(DistSamplerSeedHook())
     # register eval hooks
     if validate:

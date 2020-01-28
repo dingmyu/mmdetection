@@ -58,7 +58,7 @@ srun -p ad_lidar --gres=gpu:4 --ntasks=4 --ntasks-per-node=4 --cpus-per-task=5 -
 
 ln -s KITTI_PATH data/kitti
 python kitti_tools/split1/setup_val.py
-sh kitti_tools/devkit/cpp/build.sh
+sh kitti_tools/split1/devkit/cpp/build.sh
 
 python kitti_tools/split1/convert_datasets/kitti_in_coco.py
 python kitti_tools/split1/convert_datasets/kitti.py

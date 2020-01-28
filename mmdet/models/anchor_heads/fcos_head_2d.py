@@ -119,10 +119,10 @@ class FCOSHead2D(nn.Module):
         for cls_layer in self.cls_convs:
             cls_feat = cls_layer(cls_feat)
         cls_score = self.fcos_cls(cls_feat)
-        centerness = self.fcos_centerness(cls_feat)
 
         for reg_layer in self.reg_convs:
             reg_feat = reg_layer(reg_feat)
+        centerness = self.fcos_centerness(reg_feat)
         # scale the bbox_pred of different level
         # float to avoid overflow when enabling FP16
         bbox_pred = scale(self.fcos_reg(reg_feat)).float().exp()
@@ -162,6 +162,15 @@ class FCOSHead2D(nn.Module):
         flatten_cls_scores = torch.cat(flatten_cls_scores)
         flatten_bbox_preds = torch.cat(flatten_bbox_preds)
         flatten_centerness = torch.cat(flatten_centerness)
+
+        # check NaN and Inf
+        assert torch.isfinite(flatten_cls_scores).all().item(), \
+            'classification scores become infinite or NaN!'
+        assert torch.isfinite(flatten_bbox_preds).all().item(), \
+            'bbox predications become infinite or NaN!'
+        assert torch.isfinite(flatten_centerness).all().item(), \
+            'bbox centerness become infinite or NaN!'
+
         flatten_labels = torch.cat(labels)
         flatten_bbox_targets = torch.cat(bbox_targets)
         # repeat points to align with bbox_preds

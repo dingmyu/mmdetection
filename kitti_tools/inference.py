@@ -20,8 +20,8 @@ from mmdet.apis import init_detector, inference_detector, show_result
 import mmcv
 import cv2
 
-config_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_x101_64x4d_gn/20200120_150759_2D_baseline_lr_0.002_nms_0.4_epoch_24/fcos_x101_64x4d_gn.py'
-checkpoint_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_x101_64x4d_gn/20200120_150759_2D_baseline_lr_0.002_nms_0.4_epoch_24/latest.pth'
+config_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_x101_64x4d_gn/20200124_043725_2D_baseline_lr_0.01_nms_0.4_epoch_80/fcos_x101_64x4d_gn.py'
+checkpoint_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/fcos_x101_64x4d_gn/20200124_043725_2D_baseline_lr_0.01_nms_0.4_epoch_80/epoch_52.pth'
 # config_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/faster_rcnn_x101_64x4d_fpn_1x/2020_01_10_10_59_40_2D_FPN_lr_0.02_nms_0.5_epoch_24/faster_rcnn_x101_64x4d_fpn_1x.py'
 # checkpoint_file = '/mnt/lustre/dingmingyu/2020/mmdetection/output/faster_rcnn_x101_64x4d_fpn_1x/2020_01_10_10_59_40_2D_FPN_lr_0.02_nms_0.5_epoch_24/latest.pth'
 
@@ -40,4 +40,4 @@ for i, line in enumerate(f):
     result = inference_detector(model, img)
     img = show_result(
         img, result, model.CLASSES, score_thr=0.3, show=False)
-    cv2.imwrite('output/visualization/2d_s16/%06d.png' % line, img)
+    cv2.imwrite('output/visualization/2d_onecycle/%06d.png' % line, img)
