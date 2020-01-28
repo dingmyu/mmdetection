@@ -132,14 +132,14 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 40
+total_epochs = 32
 checkpoint_config = dict(interval=4)
 evaluation = dict(interval=4)
 workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'
 alias = '_'.join(['2D_baseline', 'lr', str(optimizer['lr']), 'nms', str(test_cfg['nms']['iou_thr']), 'epoch', str(total_epochs)])
-load_from = None
+load_from = '/mnt/lustre/dingmingyu/2020/mmdetection/work_dirs/20200128_011929_2D_baseline_lr_0.001_nms_0.4_epoch_12/epoch_12.pth'
 resume_from = None
 # config_file_name = './output/fcos_x101_64x4d_gn/'
 # work_dir = 'AUTO' #config_file_name   + datetime.datetime.now().strftime("%Y.%m.%d-%H:%M:%S").replace('.', '_').replace(':', '_').replace('-', '_') + '_' + alias
