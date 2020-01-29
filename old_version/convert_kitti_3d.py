@@ -38,8 +38,8 @@ sys.dont_write_bytecode = True
 sys.path.append(os.getcwd())
 np.set_printoptions(suppress=True)
 
-#mean_3d = [ 1.4558165,   1.5661651,   3.3934565,  -0.088102,   -1.9420172,   1.6677535, 26.494734,   -0.07895345]
-#std_3d = [ 0.39049387,  0.15824589,  1.1481881,   1.7959986,   8.103981,    0.38854262, 16.059843,    1.727274  ]
+mean_3d = [ 1.4558165,   1.5661651,   3.3934565,  -0.088102,   -1.9420172,   1.6677535, 26.494734,   -0.07895345]
+std_3d = [ 0.39049387,  0.15824589,  1.1481881,   1.7959986,   8.103981,    0.38854262, 16.059843,    1.727274  ]
 
 def read_kitti_cal(calfile):
     """
@@ -81,7 +81,7 @@ def read_kitti_cal(calfile):
     return p2
 
 
-def read_kitti_label(file, calib, dataset):
+def read_kitti_label(file, dataset):
     """
     Reads the kitti label file from disc.
     Args:
@@ -90,7 +90,6 @@ def read_kitti_label(file, calib, dataset):
     """
 
     gts = []
-    calib = calib.astype(np.float32)
 
     text_file = open(file, 'r')
 
@@ -172,19 +171,9 @@ def read_kitti_label(file, calib, dataset):
             cz3d = float(parsed.group(14))  # center of car in 3d
             rotY = float(parsed.group(15))
 
-            rotY_1 = 0
-            if rotY < 0:
-                rotY = rotY + math.pi
-                rotY_1 = 1
-            x_p, y_p, z_p, _ = calib.dot(np.array([cx3d, cy3d, cz3d, 1]))
-            x_p /= z_p
-            y_p /= z_p
-
-            obj.bbox_3d = [w3d, h3d, l3d, x_p, y_p, z_p, rotY, rotY_1, alpha, cx3d, cy3d, cz3d]
-
-            # for i in range(5):
-            #     obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
-
+            obj.bbox_3d = [w3d, h3d, l3d, alpha, cx3d, cy3d, cz3d, rotY]
+            for i in range(8):
+                obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
             obj.bbox_2d = [x, y, x2, y2]
             obj.label = label_type
 
@@ -199,32 +188,29 @@ def read_kitti_label(file, calib, dataset):
                 bboxes_3d_ignore.append(obj.bbox_3d)
                 labels_ignore.append(0)
 
-    if dataset == 'train':
-        if bboxes_ignore:
-            ann = dict(
-                bboxes=np.array(bboxes, dtype=np.float32),
-                bboxes_3d=np.array(bboxes_3d, dtype=np.float32),
-                calib=calib,
-                labels=np.array(labels, dtype=np.int64),
-                bboxes_ignore=np.array(bboxes_ignore, dtype=np.float32),
-                bboxes_3d_ignore=np.array(bboxes_3d_ignore, dtype=np.float32),
-            )
-        else:
-            ann = dict(
-                bboxes=np.array(bboxes, dtype=np.float32),
-                bboxes_3d=np.array(bboxes_3d, dtype=np.float32),
-                calib=calib,
-                labels=np.array(labels, dtype=np.int64),
-                bboxes_ignore=np.zeros((0, 4), dtype=np.float32),
-                bboxes_3d_ignore=np.zeros((0, 8), dtype=np.float32),
-            )
-    else:
-        ann = dict(
-            bboxes=np.array(bboxes, dtype=np.float32),
-            labels=np.array(labels, dtype=np.int64),
-            bboxes_3d=np.array(bboxes_3d, dtype=np.float32),
-            calib=calib,
-        )
+            if dataset == 'train':
+                if bboxes_ignore:
+                    ann = dict(
+                        bboxes=np.array(bboxes, dtype=np.float32),
+                        bboxes_3d=np.array(bboxes_3d, dtype=np.float32),
+                        labels=np.array(labels, dtype=np.int64),
+                        bboxes_ignore=np.array(bboxes_ignore, dtype=np.float32),
+                        bboxes_3d_ignore=np.array(bboxes_3d_ignore, dtype=np.float32),
+                    )
+                else:
+                    ann = dict(
+                        bboxes=np.array(bboxes, dtype=np.float32),
+                        bboxes_3d=np.array(bboxes_3d, dtype=np.float32),
+                        labels=np.array(labels, dtype=np.int64),
+                        bboxes_ignore=np.zeros((0, 4), dtype=np.float32),
+                        bboxes_3d_ignore=np.zeros((0, 8), dtype=np.float32),
+                    )
+            else:
+                ann = dict(
+                    bboxes=np.array(bboxes, dtype=np.float32),
+                    labels=np.array(labels, dtype=np.int64),
+                    bboxes_3d=np.array(bboxes_3d, dtype=np.float32),
+                )
 
     return gts, ann
 
@@ -267,9 +253,8 @@ for item in ['train', 'val']:
             file_shape = cv2.imread(file_info['filename']).shape[:2][::-1]
             file_info['width'] = file_shape[0]
             file_info['height'] = file_shape[1]
-
             file_info['calib'] = read_kitti_cal(file_info['calibname'])
-            file_info['label'], file_info['ann'] = read_kitti_label(file_info['labelname'], file_info['calib'], item)
+            file_info['label'], file_info['ann'] = read_kitti_label(file_info['labelname'], item)
             # stats = np.concatenate((stats, file_info['ann']['bboxes_3d']), axis=0)
             # print(stats.mean(0), stats.std(0))
             if item == 'train':
@@ -279,5 +264,5 @@ for item in ['train', 'val']:
 # output = open(os.path.join(os.getcwd(), 'train.pkl'), 'wb')
 # pickle.dump(train_list, output)
 # print(stats.mean(0),stats.std(0))
-mmcv.dump(train_list, os.path.join(os.getcwd(), os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'train_3d.pkl')))
-mmcv.dump(val_list, os.path.join(os.getcwd(), os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'val_3d.pkl')))
+mmcv.dump(train_list, os.path.join(os.getcwd(), os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'train_3d_test.pkl')))
+mmcv.dump(val_list, os.path.join(os.getcwd(), os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'val_3d_test.pkl')))

@@ -154,12 +154,18 @@ class FCOSHead2D(nn.Module):
             for cls_score in cls_scores
         ]
         if cfg.stat_2d:
+            # from mmdet.apis import get_root_logger
+            # logger = get_root_logger()
             stat = cv2.imread('kitti_tools/stat/stat_2d.png').astype(np.float32)
             stat = cv2.resize(stat, (106, 32)).astype(np.float32)
+            # std = np.std(stat, axis=(0, 1))
+            # stat /= std
             w_stat = torch.from_numpy(stat[:,:,1]).float().cuda().unsqueeze(0)
             h_stat = torch.from_numpy(stat[:,:,2]).float().cuda().unsqueeze(0)
             stat_all = torch.cat([w_stat, h_stat, w_stat, h_stat], dim = 0)
-            bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]
+            # logger.info('old', bbox_preds[0][0, :, 20, 20])
+            bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]  # torch.exp(bbox_pred)
+            # logger.info('new', bbox_preds[0][0, :, 20, 20])
         flatten_bbox_preds = [
             bbox_pred.permute(0, 2, 3, 1).reshape(-1, 4)
             for bbox_pred in bbox_preds
@@ -269,10 +275,12 @@ class FCOSHead2D(nn.Module):
         if cfg.stat_2d:
             stat = cv2.imread('kitti_tools/stat/stat_2d.png').astype(np.float32)
             stat = cv2.resize(stat, (106, 32)).astype(np.float32)
+            # std = np.std(stat, axis=(0, 1))
+            # stat /= std
             w_stat = torch.from_numpy(stat[:,:,1]).float().cuda().unsqueeze(0)
             h_stat = torch.from_numpy(stat[:,:,2]).float().cuda().unsqueeze(0)
             stat_all = torch.cat([w_stat, h_stat, w_stat, h_stat], dim = 0)
-            bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]
+            bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]  # torch.exp(bbox_pred)
         for cls_score, bbox_pred, centerness, points in zip(
                 cls_scores, bbox_preds, centernesses, mlvl_points):
             assert cls_score.size()[-2:] == bbox_pred.size()[-2:]

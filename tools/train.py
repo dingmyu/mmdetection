@@ -88,6 +88,8 @@ def main():
     # create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     shutil.copyfile(args.config, os.path.join(cfg.work_dir, args.config.split('/')[-1]))
+    shutil.copyfile(cfg.copy_dict[cfg.model['type']], os.path.join(cfg.work_dir, cfg.copy_dict[cfg.model['type']].split('/')[-1]))
+    shutil.copyfile(cfg.copy_dict[cfg.model['bbox_head']['type']], os.path.join(cfg.work_dir, cfg.copy_dict[cfg.model['bbox_head']['type']].split('/')[-1]))
     # init the logger before other steps
     log_file = osp.join(cfg.work_dir, '{}.log'.format(timestamp))
     logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)

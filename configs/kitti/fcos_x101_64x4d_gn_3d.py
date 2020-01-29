@@ -8,7 +8,7 @@ evaluation = dict(interval=4)
 workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'
-name = '2D_BASELINE'
+name = '3D_BASELINE'
 
 card = 8
 pretrain = True
@@ -21,8 +21,15 @@ else:
 resume_from = None
 
 
+copy_dict = dict(
+    FCOS2D='mmdet/models/detectors/fcos.py',
+    FCOSHead2D='mmdet/models/anchor_heads/fcos_head_2d.py',
+    FCOS3D='mmdet/models/detectors/fcos_3d.py',
+    FCOSHead3D='mmdet/models/anchor_heads/fcos_head_3d.py',
+)
+
 model = dict(
-    type='FCOS',
+    type='FCOS3D',
     pretrained='open-mmlab://resnext101_64x4d',
     backbone=dict(
         type='Dilated_ResNeXt',
@@ -35,7 +42,7 @@ model = dict(
         style='pytorch'),
     neck=None,
     bbox_head=dict(
-        type='FCOSHead2D',
+        type='FCOSHead3D',
         num_classes=4,
         in_channels=2048,
         stacked_convs=1,
@@ -76,17 +83,17 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_bbox_3d=True),
     dict(
         type='Resize',
-        img_scale=[(1696, 512)],
-        multiscale_mode='value',
+        img_scale=(1696, 512),
+        #multiscale_mode='value',
         keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_bboxes_3d', 'gt_labels']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -108,17 +115,17 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'train_3d_test.pkl',
+        ann_file=data_root + 'train_3d.pkl',
         img_prefix=None,
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'val_3d_test.pkl',
+        ann_file=data_root + 'val_3d.pkl',
         img_prefix=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'val_3d_test.pkl',
+        ann_file=data_root + 'val_3d.pkl',
         img_prefix=None,
         pipeline=test_pipeline))
 # optimizer

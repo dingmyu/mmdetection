@@ -140,6 +140,14 @@ class Resize(object):
             bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0] - 1)
             results[key] = bboxes
 
+    def _resize_bboxes_3d(self, results):
+        # from mmdet.apis import get_root_logger
+        # logger = get_root_logger()
+        # logger.info('scale_factor: {}'.format(results['scale_factor']))
+        # logger.info('gt_bboxes_3d_old: {}'.format(results['gt_bboxes_3d']))
+        results['gt_bboxes_3d'][:, 3:5] *= results['scale_factor']
+        # logger.info('gt_bboxes_3d_new: {}'.format(results['gt_bboxes_3d']))
+
     def _resize_masks(self, results):
         for key in results.get('mask_fields', []):
             if results[key] is None:
@@ -175,6 +183,8 @@ class Resize(object):
         self._resize_bboxes(results)
         self._resize_masks(results)
         self._resize_seg(results)
+        if 'gt_bboxes_3d' in results:
+            self._resize_bboxes_3d(results)
         return results
 
     def __repr__(self):
@@ -228,13 +238,13 @@ class RandomFlip(object):
                 'Invalid flipping direction "{}"'.format(direction))
         return flipped
 
-    def bbox_flip_3d(self, bboxes, direction):
-        assert bboxes.shape[-1] % 8 == 0
+    def bbox_flip_3d(self, bboxes, img_shape, direction):
+        assert bboxes.shape[-1] % 12 == 0
         flipped = bboxes.copy()
         if direction == 'horizontal':
-            flipped[..., 3::8] = math.pi - bboxes[..., 3::8]  # TODO: -math.pi
-            flipped[..., 7::8] = math.pi - bboxes[..., 7::8]
-            flipped[..., 4::8] = - bboxes[..., 4::8]
+            w = img_shape[1]
+            flipped[..., 3::12] = w - bboxes[..., 3::12] - 1
+            flipped[..., 6::12] = math.pi - bboxes[..., 6::12]
         else:
             raise ValueError(
                 'Invalid flipping direction "{}"'.format(direction))
@@ -255,8 +265,8 @@ class RandomFlip(object):
                 results[key] = self.bbox_flip(results[key],
                                               results['img_shape'],
                                               results['flip_direction'])
-            # results['gt_3ds'] = self.bbox_flip_3d(results['gt_3ds'],
-            #                               results['flip_direction'])
+            if 'gt_bboxes_3d' in results:
+                results['gt_bboxes_3d'] = self.bbox_flip_3d(results['gt_bboxes_3d'], results['img_shape'], results['flip_direction'])
             # flip masks
             for key in results.get('mask_fields', []):
                 results[key] = [

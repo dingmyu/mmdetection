@@ -98,7 +98,8 @@ def read_kitti_label(file):
             cz3d = float(parsed.group(14))  # center of car in 3d
             rotY = float(parsed.group(15))
             # all_boxes.append(((x+x2)/2, (y+y2)/2, width, height))
-            all_boxes.append((x, x2, y, y2, width, height))
+            if label_type in ['Car']:
+                all_boxes.append((x, x2, y, y2, width, height))
     return all_boxes
 
 import re
@@ -139,14 +140,14 @@ print('number of None:', (a[:,:,0]==0).sum()/(1242*375))
 # import matplotlib.pyplot as plt
 # plt.imshow(a.astype(np.int))
 
-a[0,:,1][a[0,:,1]==0] = a[0,:,1][a[0,:,1]!=0].mean()
-a[0,:,2][a[0,:,2]==0] = a[0,:,2][a[0,:,2]!=0].mean()
 a[-1,:,1][a[-1,:,1]==0] = a[-1,:,1][a[-1,:,1]!=0].mean()
 a[-1,:,2][a[-1,:,2]==0] = a[-1,:,2][a[-1,:,2]!=0].mean()
 a[:,0,1][a[:,0,1]==0] = a[:,0,1][a[:,0,1]!=0].mean()
 a[:,0,2][a[:,0,2]==0] = a[:,0,2][a[:,0,2]!=0].mean()
 a[:,-1,1][a[:,-1,1]==0] = a[:,-1,1][a[:,-1,1]!=0].mean()
 a[:,-1,2][a[:,-1,2]==0] = a[:,-1,2][a[:,-1,2]!=0].mean()
+a[0,:,1][a[0,:,1]==0] = a[0,:,1][a[0,:,1]!=0].mean()
+a[0,:,2][a[0,:,2]==0] = a[0,:,2][a[0,:,2]!=0].mean()
 # a[:,:,1][a[:,:,1]==0] = a[0,:,1][a[0,:,1]!=0].mean()
 # a[:,:,2][a[:,:,2]==0] = a[0,:,2][a[0,:,2]!=0].mean()
 

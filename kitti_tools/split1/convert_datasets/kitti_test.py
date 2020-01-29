@@ -180,26 +180,26 @@ def read_kitti_label(file, dataset):
                 bboxes_ignore.append(obj.bbox_2d)
                 labels_ignore.append(0)
 
-            if dataset == 'train':
-                if bboxes_ignore:
-                    ann = dict(
-                        bboxes=np.array(bboxes, dtype=np.float32),
-                        labels=np.array(labels, dtype=np.int64),
-                        bboxes_ignore=np.array(bboxes_ignore, dtype=np.float32),
-                        #                     labels_ignore=np.array(labels_ignore, dtype=np.int64)
-                    )
-                else:
-                    ann = dict(
-                        bboxes=np.array(bboxes, dtype=np.float32),
-                        labels=np.array(labels, dtype=np.int64),
-                        bboxes_ignore=np.zeros((0, 4), dtype=np.float32),
-                        #                     labels_ignore=np.zeros((0, ))
-                    )
-            else:
-                ann = dict(
-                    bboxes=np.array(bboxes, dtype=np.float32),
-                    labels=np.array(labels, dtype=np.int64),
-                )
+    if dataset == 'train':
+        if bboxes_ignore:
+            ann = dict(
+                bboxes=np.array(bboxes, dtype=np.float32),
+                labels=np.array(labels, dtype=np.int64),
+                bboxes_ignore=np.array(bboxes_ignore, dtype=np.float32),
+                #                     labels_ignore=np.array(labels_ignore, dtype=np.int64)
+            )
+        else:
+            ann = dict(
+                bboxes=np.array(bboxes, dtype=np.float32),
+                labels=np.array(labels, dtype=np.int64),
+                bboxes_ignore=np.zeros((0, 4), dtype=np.float32),
+                #                     labels_ignore=np.zeros((0, ))
+            )
+    else:
+        ann = dict(
+            bboxes=np.array(bboxes, dtype=np.float32),
+            labels=np.array(labels, dtype=np.int64),
+        )
 
     return gts, ann
 

@@ -41,13 +41,13 @@ class LoadAnnotations(object):
                  with_label=True,
                  with_mask=False,
                  with_seg=False,
-                 with_3d=False,
+                 with_bbox_3d=False,
                  poly2mask=True):
         self.with_bbox = with_bbox
         self.with_label = with_label
         self.with_mask = with_mask
         self.with_seg = with_seg
-        self.with_3d = with_3d
+        self.with_bbox_3d = with_bbox_3d
         self.poly2mask = poly2mask
 
     def _load_bboxes(self, results):
@@ -89,9 +89,14 @@ class LoadAnnotations(object):
         results['mask_fields'].append('gt_masks')
         return results
 
-    def _load_3d(self, results):
+    def _load_bboxes_3d(self, results):
         gt_3ds = results['ann_info']['bboxes_3d']
-        results['gt_3ds'] = gt_3ds
+        results['gt_bboxes_3d'] = gt_3ds
+        return results
+
+    def _load_calib(self, results):
+        calib = results['ann_info']['calib']
+        results['calib'] = calib
         return results
 
     def _load_semantic_seg(self, results):
@@ -112,15 +117,16 @@ class LoadAnnotations(object):
             results = self._load_masks(results)
         if self.with_seg:
             results = self._load_semantic_seg(results)
-        if self.with_3d:
-            results = self._load_3d(results)
+        if self.with_bbox_3d:
+            results = self._load_bboxes_3d(results)
+            results = self._load_calib(results)
         return results
 
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += ('(with_bbox={}, with_label={}, with_mask={},'
-                     ' with_seg={}, with_3d={})').format(self.with_bbox, self.with_label,
-                                             self.with_mask, self.with_seg, self.with_3d)
+                     ' with_seg={}, with_bbox_3d={})').format(self.with_bbox, self.with_label,
+                                             self.with_mask, self.with_seg, self.with_bbox_3d)
         return repr_str
 
 
