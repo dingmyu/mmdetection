@@ -420,7 +420,7 @@ class FCOSHead3D(nn.Module):
 
         # condition1: inside a gt bbox
         inside_gt_bbox_mask = bbox_targets.min(-1)[0] > 0
-        inside_gt_center_mask = bbox_targets.min(-1)[0] > bbox_targets.max(-1)[0]/3
+        # inside_gt_center_mask = bbox_targets.min(-1)[0] > bbox_targets.max(-1)[0]/3  # ~~~~~~ center
         # from mmdet.apis import get_root_logger
         # logger = get_root_logger()
         # logger.info(bbox_targets.min(-1)[0], bbox_targets.max(-1)[0])
@@ -434,7 +434,7 @@ class FCOSHead3D(nn.Module):
         # if there are still more than one objects for a location,
         # we choose the one with minimal area
         areas[inside_gt_bbox_mask == 0] = INF
-        areas[inside_gt_center_mask == 0] = INF
+        # areas[inside_gt_center_mask == 0] = INF
         areas[inside_regress_range == 0] = INF
         min_area, min_area_inds = areas.min(dim=1)  # TODO: max or min
 

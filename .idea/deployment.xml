@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="10.5.36.31">
+    <serverData>
+      <paths name="10.5.36.31">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath path="work_dirs" />
+            <excludedPath path="build" />
+            <excludedPath path="data" />
+            <excludedPath path="mmdet.egg-info" />
+            <excludedPath path=".eggs" />
+            <excludedPath path=".github" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.github" />
+            <excludedPath path="mmdet/ops" />
+            <excludedPath local="true" path="$PROJECT_DIR$/data" />
+            <excludedPath path="kitti_tools/split1/validation" />
+            <excludedPath path="mmdet/version.py" />
+            <excludedPath path="kitti_tools/split1/devkit/cpp/evaluate_object" />
+            <excludedPath path="output" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
