@@ -1,6 +1,25 @@
 # model settings
 import datetime
 
+
+total_epochs = 32
+checkpoint_config = dict(interval=4)
+evaluation = dict(interval=4)
+workflow = [('train', 1)]
+dist_params = dict(backend='nccl', port=9899)
+log_level = 'INFO'
+
+card = 8
+pretrain = False
+stat_2d = True
+
+if pretrain:
+    load_from = '/mnt/lustre/dingmingyu/2020/mmdetection/work_dirs/20200128_011929_2D_baseline_lr_0.001_nms_0.4_epoch_12/epoch_12.pth'
+else:
+    load_from = None
+resume_from = None
+
+
 model = dict(
     type='FCOS',
     pretrained='open-mmlab://resnext101_64x4d',
@@ -14,15 +33,6 @@ model = dict(
         frozen_stages=1,
         style='pytorch'),
     neck=None,
-    # dict(
-    #     type='FPN3D',
-    #     in_channels=[256, 512, 1024, 2048],
-    #     out_channels=256,
-    #     start_level=1,
-    #     add_extra_convs=True,
-    #     extra_convs_on_inputs=False,  # use P5
-    #     num_outs=5,
-    #     relu_before_extra_convs=True),
     bbox_head=dict(
         type='FCOSHead2D',
         num_classes=4,
@@ -49,13 +59,15 @@ train_cfg = dict(
         ignore_iof_thr=-1),
     allowed_border=-1,
     pos_weight=-1,
-    debug=False)
+    debug=False,
+    stat_2d=stat_2d)
 test_cfg = dict(
     nms_pre=1000,
     min_bbox_size=0,
     score_thr=0.05,
     nms=dict(type='nms', iou_thr=0.4),
-    max_per_img=100)
+    max_per_img=100,
+    stat_2d=stat_2d)
 # dataset settings
 dataset_type = 'KittiDataset'
 data_root = 'kitti_tools/split1/'
@@ -132,14 +144,5 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 32
-checkpoint_config = dict(interval=4)
-evaluation = dict(interval=4)
-workflow = [('train', 1)]
-dist_params = dict(backend='nccl', port=9899)
-log_level = 'INFO'
-alias = '_'.join(['2D_baseline', 'lr', str(optimizer['lr']), 'nms', str(test_cfg['nms']['iou_thr']), 'epoch', str(total_epochs)])
-load_from = '/mnt/lustre/dingmingyu/2020/mmdetection/work_dirs/20200128_011929_2D_baseline_lr_0.001_nms_0.4_epoch_12/epoch_12.pth'
-resume_from = None
-# config_file_name = './output/fcos_x101_64x4d_gn/'
-# work_dir = 'AUTO' #config_file_name   + datetime.datetime.now().strftime("%Y.%m.%d-%H:%M:%S").replace('.', '_').replace(':', '_').replace('-', '_') + '_' + alias
+
+alias = '_'.join(['2DSTAT', 'pretrain', str(pretrain), 'stat', str(stat_2d), 'lr', lr_config['policy'], str(optimizer['lr']), 'nms', str(test_cfg['nms']['iou_thr']), 'epoch', str(total_epochs), 'batch', str(data['imgs_per_gpu'] * card)])

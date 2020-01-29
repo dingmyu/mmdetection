@@ -7,6 +7,8 @@ from ..builder import build_loss
 from ..registry import HEADS
 from ..utils import ConvModule, Scale, bias_init_with_prob
 
+import cv2
+import numpy as np
 INF = 1e8
 
 
@@ -151,6 +153,13 @@ class FCOSHead2D(nn.Module):
             cls_score.permute(0, 2, 3, 1).reshape(-1, self.cls_out_channels)
             for cls_score in cls_scores
         ]
+        if cfg.stat_2d:
+            stat = cv2.imread('kitti_tools/stat/stat_2d.png').astype(np.float32)
+            stat = cv2.resize(stat, (106, 32)).astype(np.float32)
+            w_stat = torch.from_numpy(stat[:,:,1]).float().cuda().unsqueeze(0)
+            h_stat = torch.from_numpy(stat[:,:,2]).float().cuda().unsqueeze(0)
+            stat_all = torch.cat([w_stat, h_stat, w_stat, h_stat], dim = 0)
+            bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]
         flatten_bbox_preds = [
             bbox_pred.permute(0, 2, 3, 1).reshape(-1, 4)
             for bbox_pred in bbox_preds
@@ -257,6 +266,13 @@ class FCOSHead2D(nn.Module):
         mlvl_bboxes = []
         mlvl_scores = []
         mlvl_centerness = []
+        if cfg.stat_2d:
+            stat = cv2.imread('kitti_tools/stat/stat_2d.png').astype(np.float32)
+            stat = cv2.resize(stat, (106, 32)).astype(np.float32)
+            w_stat = torch.from_numpy(stat[:,:,1]).float().cuda().unsqueeze(0)
+            h_stat = torch.from_numpy(stat[:,:,2]).float().cuda().unsqueeze(0)
+            stat_all = torch.cat([w_stat, h_stat, w_stat, h_stat], dim = 0)
+            bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]
         for cls_score, bbox_pred, centerness, points in zip(
                 cls_scores, bbox_preds, centernesses, mlvl_points):
             assert cls_score.size()[-2:] == bbox_pred.size()[-2:]

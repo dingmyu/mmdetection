@@ -60,9 +60,11 @@ ln -s KITTI_PATH data/kitti
 python kitti_tools/split1/setup_val.py
 sh kitti_tools/split1/devkit/cpp/build.sh
 
-python kitti_tools/split1/convert_datasets/kitti_in_coco.py
+#python kitti_tools/split1/convert_datasets/kitti_in_coco.py
 python kitti_tools/split1/convert_datasets/kitti.py
 python kitti_tools/split1/convert_datasets/kitti_test.py
+
+python kitti_tools/stat/stat_2d.py
 
 # if use split2, change the script path in eval_hooks.py
 # script = os.path.join(os.getcwd(), 'kitti_tools', 'split1', 'devkit', 'cpp', 'evaluate_object')
