@@ -20,6 +20,12 @@ else:
     load_from = None
 resume_from = None
 
+copy_dict = dict(
+    FCOS='mmdet/models/detectors/fcos.py',
+    FCOSHead2D='mmdet/models/anchor_heads/fcos_head_2d.py',
+    FCOS3D='mmdet/models/detectors/fcos_3d.py',
+    FCOSHead3D='mmdet/models/anchor_heads/fcos_head_3d.py',
+)
 
 model = dict(
     type='FCOS',
@@ -108,17 +114,17 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'train_3d_test.pkl',
+        ann_file=data_root + 'train_3d.pkl',
         img_prefix=None,
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'val_3d_test.pkl',
+        ann_file=data_root + 'val_3d.pkl',
         img_prefix=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'val_3d_test.pkl',
+        ann_file=data_root + 'val_3d.pkl',
         img_prefix=None,
         pipeline=test_pipeline))
 # optimizer

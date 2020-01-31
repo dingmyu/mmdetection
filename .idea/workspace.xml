@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="Finish 2d, add 3d depth">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="Add 3d baseline.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn.py" beforeDir="false" afterPath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kitti_tools/split1/convert_datasets/kitti_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/kitti_tools/split1/convert_datasets/kitti_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/apis/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/apis/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/core/evaluation/eval_hooks.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/evaluation/eval_hooks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/core/post_processing/bbox_nms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/post_processing/bbox_nms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/datasets/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/datasets/kitti_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/kitti_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/datasets/pipelines/formating.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/pipelines/formating.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/models/detectors/fcos_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/detectors/fcos_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train.sh" beforeDir="false" afterPath="$PROJECT_DIR$/train.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -82,6 +95,12 @@
       <workItem from="1577346698615" duration="111357000" />
       <workItem from="1578654788385" duration="19084000" />
       <workItem from="1579424228475" duration="82520000" />
+      <workItem from="1580322952699" duration="1470000" />
+      <workItem from="1580347412674" duration="2655000" />
+      <workItem from="1580350350562" duration="22383000" />
+      <workItem from="1580448265351" duration="3168000" />
+      <workItem from="1580459771241" duration="2962000" />
+      <workItem from="1580463019343" duration="8886000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Import.">
       <created>1576574849894</created>
@@ -248,7 +267,8 @@
     <MESSAGE value="2D Onecycle." />
     <MESSAGE value="Add pretrain." />
     <MESSAGE value="Finish 2d, add 3d depth" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finish 2d, add 3d depth" />
+    <MESSAGE value="Add 3d baseline." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add 3d baseline." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

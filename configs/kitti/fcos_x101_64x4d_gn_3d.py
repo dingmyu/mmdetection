@@ -3,8 +3,8 @@ import datetime
 
 
 total_epochs = 24
-checkpoint_config = dict(interval=4)
-evaluation = dict(interval=4)
+checkpoint_config = dict(interval=1)
+evaluation = dict(interval=1)
 workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'
@@ -22,7 +22,7 @@ resume_from = None
 
 
 copy_dict = dict(
-    FCOS2D='mmdet/models/detectors/fcos.py',
+    FCOS='mmdet/models/detectors/fcos.py',
     FCOSHead2D='mmdet/models/anchor_heads/fcos_head_2d.py',
     FCOS3D='mmdet/models/detectors/fcos_3d.py',
     FCOSHead3D='mmdet/models/anchor_heads/fcos_head_3d.py',
@@ -55,6 +55,7 @@ model = dict(
             alpha=0.25,
             loss_weight=1.0),
         loss_bbox=dict(type='IoULoss', loss_weight=1.0),
+        loss_bbox_3d=dict(type='SmoothL1Loss', loss_weight=0.1),
         loss_centerness=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)))
 # training and testing settings
@@ -77,7 +78,7 @@ test_cfg = dict(
     max_per_img=100,
     stat_2d=stat_2d)
 # dataset settings
-dataset_type = 'KittiDataset'
+dataset_type = 'Kitti3dDataset'
 data_root = 'kitti_tools/split1/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -107,7 +108,7 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img']),
+            dict(type='Collect', keys=['img', 'calib']),
         ])
 ]
 data = dict(

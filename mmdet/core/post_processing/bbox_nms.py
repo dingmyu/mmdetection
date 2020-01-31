@@ -76,7 +76,7 @@ def multiclass_nms(multi_bboxes,
         bboxes = multi_bboxes.new_zeros((0, 5))
         labels = multi_bboxes.new_zeros((0, ), dtype=torch.long)
         if multi_bboxes_3d is not None:
-            bboxes_3d = multi_bboxes_3d.new_zeros((0, 5))
+            bboxes_3d = multi_bboxes_3d.new_zeros((0, 8))
     if multi_bboxes_3d is not None:
         return bboxes, bboxes_3d, labels
     else:

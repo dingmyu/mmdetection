@@ -9,10 +9,11 @@ from .voc import VOCDataset
 from .wider_face import WIDERFaceDataset
 from .xml_style import XMLDataset
 from .kitti import KittiDataset
+from .kitti_3d import Kitti3dDataset
 from .kitti_in_coco import KittiInCocoDataset
 
 __all__ = [
-    'CustomDataset', 'XMLDataset', 'CocoDataset', 'VOCDataset', 'KittiDataset', 'KittiInCocoDataset',
+    'CustomDataset', 'XMLDataset', 'CocoDataset', 'VOCDataset', 'KittiDataset', 'KittiInCocoDataset', 'Kitti3dDataset'
     'CityscapesDataset', 'GroupSampler', 'DistributedGroupSampler',
     'build_dataloader', 'ConcatDataset', 'RepeatDataset', 'WIDERFaceDataset',
     'DATASETS', 'build_dataset'

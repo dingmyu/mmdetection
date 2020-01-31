@@ -40,6 +40,8 @@ np.set_printoptions(suppress=True)
 
 #mean_3d = [ 1.4558165,   1.5661651,   3.3934565,  -0.088102,   -1.9420172,   1.6677535, 26.494734,   -0.07895345]
 #std_3d = [ 0.39049387,  0.15824589,  1.1481881,   1.7959986,   8.103981,    0.38854262, 16.059843,    1.727274  ]
+mean_3d = [ 1.4558165,   1.5661651,   3.3934565,  26.494734]
+std_3d = [ 0.39049387,  0.15824589,  1.1481881, 16.059843]
 
 def read_kitti_cal(calfile):
     """
@@ -182,8 +184,9 @@ def read_kitti_label(file, calib, dataset):
 
             obj.bbox_3d = [w3d, h3d, l3d, x_p, y_p, z_p, rotY, rotY_1, alpha, cx3d, cy3d, cz3d]
 
-            # for i in range(5):
-            #     obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
+            for i in range(3):
+                obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
+            obj.bbox_3d[5] = (obj.bbox_3d[5] - mean_3d[3]) / std_3d[3]
 
             obj.bbox_2d = [x, y, x2, y2]
             obj.label = label_type

@@ -265,7 +265,7 @@ def _dist_train(model,
                 CocoDistEvalRecallHook(val_dataset_cfg, **eval_cfg))
         else:
             dataset_type = DATASETS.get(val_dataset_cfg.type)
-            if cfg.data.val.type in ['KittiDataset', 'KittiInCocoDataset']:
+            if cfg.data.val.type in ['KittiDataset', 'KittiInCocoDataset', 'Kitti3dDataset']:
                 runner.register_hook(
                     KITTIDistEvalmAPHook(val_dataset_cfg, **eval_cfg))
             elif issubclass(dataset_type, datasets.CocoDataset):

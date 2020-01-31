@@ -52,7 +52,10 @@ class ImageToTensor(object):
 
     def __call__(self, results):
         for key in self.keys:
-            results[key] = to_tensor(results[key].transpose(2, 0, 1))
+            if key == 'calib':
+                results[key] = to_tensor(results[key])
+            else:
+                results[key] = to_tensor(results[key].transpose(2, 0, 1))
         return results
 
     def __repr__(self):
