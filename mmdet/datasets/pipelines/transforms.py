@@ -363,7 +363,14 @@ class Normalize(object):
         self.to_rgb = to_rgb
 
     def __call__(self, results):
-        results['img'] = mmcv.imnormalize(results['img'], self.mean, self.std,
+        if results['img'].shape[2] == 5:
+            stat_w = (results['img'][:,:,3:4] - self.mean[3]) / self.std[3]
+            stat_h = (results['img'][:,:,3:4] - self.mean[4]) / self.std[4]
+            results['img'] = mmcv.imnormalize(results['img'][:,:,:3], self.mean[:3], self.std[:3],
+                                          self.to_rgb)
+            results['img'] = np.concatenate((results['img'], stat_w, stat_h), axis=2)
+        else:
+            results['img'] = mmcv.imnormalize(results['img'], self.mean, self.std,
                                           self.to_rgb)
         results['img_norm_cfg'] = dict(
             mean=self.mean, std=self.std, to_rgb=self.to_rgb)

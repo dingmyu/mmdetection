@@ -13,6 +13,7 @@ name = '3D_BASELINE'
 card = 8
 pretrain = True
 stat_2d = False
+channels = 3
 
 if pretrain:
     load_from = '/mnt/lustre/dingmingyu/2020/mmdetection/work_dirs/20200128_011929_2D_baseline_lr_0.001_nms_0.4_epoch_12/epoch_12.pth'
@@ -33,6 +34,7 @@ model = dict(
     pretrained='open-mmlab://resnext101_64x4d',
     backbone=dict(
         type='Dilated_ResNeXt',
+        in_channels=channels,
         depth=101,
         groups=64,
         base_width=4,
@@ -55,7 +57,7 @@ model = dict(
             alpha=0.25,
             loss_weight=1.0),
         loss_bbox=dict(type='IoULoss', loss_weight=1.0),
-        loss_bbox_3d=dict(type='SmoothL1Loss', loss_weight=0.1),
+        loss_bbox_3d=dict(type='SmoothL1Loss', loss_weight=1.0),
         loss_centerness=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)))
 # training and testing settings
@@ -80,10 +82,15 @@ test_cfg = dict(
 # dataset settings
 dataset_type = 'Kitti3dDataset'
 data_root = 'kitti_tools/split1/'
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+if channels == 5:
+    img_norm_cfg = dict(
+        mean=[123.675, 116.28, 103.53, 133.56860548, 91.18909286], std=[58.395, 57.12, 57.375, 35.72057158, 33.77605146], to_rgb=True)  # RGB + 2d_wh
+else:
+    img_norm_cfg = dict(
+        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', channels=channels),
     dict(type='LoadAnnotations', with_bbox=True, with_bbox_3d=True),
     dict(
         type='Resize',
@@ -97,7 +104,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_bboxes_3d', 'gt_labels']),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', channels=channels),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1696, 512),

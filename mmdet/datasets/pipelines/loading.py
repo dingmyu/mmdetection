@@ -6,12 +6,14 @@ import pycocotools.mask as maskUtils
 
 from ..registry import PIPELINES
 
+import cv2
 
 @PIPELINES.register_module
 class LoadImageFromFile(object):
 
-    def __init__(self, to_float32=False):
+    def __init__(self, to_float32=False, channels=3):
         self.to_float32 = to_float32
+        self.channels = channels
 
     def __call__(self, results):
         if results['img_prefix'] is not None:
@@ -22,6 +24,10 @@ class LoadImageFromFile(object):
         img = mmcv.imread(filename)
         if self.to_float32:
             img = img.astype(np.float32)
+        if self.channels == 5:
+            stat = cv2.imread('kitti_tools/stat/stat_2d.png').astype(np.float32)
+            stat = cv2.resize(stat, (img.shape[1],img.shape[0])).astype(np.float32)
+            img = np.concatenate((img, stat[:,:,1:3]), axis=2)
         results['filename'] = filename
         results['img'] = img
         results['img_shape'] = img.shape

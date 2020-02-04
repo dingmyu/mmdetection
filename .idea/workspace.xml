@@ -1,22 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="Add 3d baseline.">
+    <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn.py" beforeDir="false" afterPath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kitti_tools/split1/convert_datasets/kitti_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/kitti_tools/split1/convert_datasets/kitti_3d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/apis/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/apis/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/core/evaluation/eval_hooks.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/evaluation/eval_hooks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/core/post_processing/bbox_nms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/post_processing/bbox_nms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/datasets/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/datasets/kitti_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/kitti_3d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/datasets/pipelines/formating.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/pipelines/formating.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/datasets/pipelines/loading.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/pipelines/loading.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/datasets/pipelines/transforms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/pipelines/transforms.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/models/detectors/fcos_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/detectors/fcos_3d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train.sh" beforeDir="false" afterPath="$PROJECT_DIR$/train.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -35,6 +28,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="dingmyu &lt;d130143597@163.com&gt;" />
+      </list>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1V650F1Nroy0ni6q6SCxyNmS4eB" />
@@ -50,7 +48,7 @@
     <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/mmdet/models/anchor_heads" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -100,7 +98,8 @@
       <workItem from="1580350350562" duration="22383000" />
       <workItem from="1580448265351" duration="3168000" />
       <workItem from="1580459771241" duration="2962000" />
-      <workItem from="1580463019343" duration="8886000" />
+      <workItem from="1580463019343" duration="14155000" />
+      <workItem from="1580527161266" duration="12019000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Import.">
       <created>1576574849894</created>
@@ -235,7 +234,14 @@
       <option name="project" value="LOCAL" />
       <updated>1580316712814</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Add 3d baseline.">
+      <created>1580485531174</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1580485531174</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

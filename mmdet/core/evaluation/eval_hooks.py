@@ -170,7 +170,8 @@ class KITTIDistEvalmAPHook(DistEvalHook):
                             item[10] = item[10] * std_3d[3] + mean_3d[3]
                             if item[12] > 0.5:
                                 item[11] = -item[11]
-                            print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], item[5], item[6], item[7], item[8], item[9], item[10], item[11], item[4], file=f)
+                            if item[5] > 0 and item[6] > 0 and item[7] > 0:
+                                print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], item[5], item[6], item[7], item[8], item[9], item[10], item[11], item[4], file=f)
             f.close()
 
         script = os.path.join(
