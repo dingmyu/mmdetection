@@ -243,6 +243,7 @@ def distance2center(points, distance):
     Returns:
         Tensor: Decoded bboxes.
     """
-    distance[:, 3] = points[:, 0] + distance[:, 3]  # TODO: use variable
-    distance[:, 4] = points[:, 1] + distance[:, 4]
+    std_3d = [73.31452, 29.732836]
+    distance[:, 3] = points[:, 0] + distance[:, 3] * (std_3d[0]*512/375)  # TODO: use variable
+    distance[:, 4] = points[:, 1] + distance[:, 4] * (std_3d[1]*512/375)
     return distance

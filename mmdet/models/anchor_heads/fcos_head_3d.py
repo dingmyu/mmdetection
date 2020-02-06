@@ -505,8 +505,10 @@ class FCOSHead3D(nn.Module):
         # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4] - ys
         # gt_bboxes_3d[..., 3] = gt_bboxes_3d[..., 3]  # TODO: use variable
         # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4]
-        center_x = gt_bboxes_3d[..., 3] - xs
-        center_y = gt_bboxes_3d[..., 4] - ys
+        std_3d = [73.31452, 29.732836]
+        center_x = ((gt_bboxes_3d[..., 3] - xs))/ (std_3d[0]*512/375)
+        center_y = ((gt_bboxes_3d[..., 4] - ys))/ (std_3d[1]*512/375)
+
         gt_bboxes_3d = torch.stack((gt_bboxes_3d[..., 0],gt_bboxes_3d[..., 1],gt_bboxes_3d[..., 2],
                                     center_x,center_y,gt_bboxes_3d[..., 5],
                                     gt_bboxes_3d[..., 6],gt_bboxes_3d[..., 7]), -1)

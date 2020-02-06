@@ -31,10 +31,16 @@ class FCOS3D(SingleStageDetector):
         return losses
 
     def simple_test(self, img, img_meta, calib, rescale=False):
+        mean_3d = [1.566141, 1.4557937, 3.393441, 0, 0, 26.497492, 1.5803262, 0.528173]
+        std_3d = [0.15824416, 0.39049828, 1.1481832, 1, 1, 16.059835, 0.678825, 0.49920323]
         x = self.extract_feat(img)
         outs = self.bbox_head(x)
         bbox_inputs = outs + (img_meta, self.test_cfg, rescale)
         bbox_list = self.bbox_head.get_bboxes(*bbox_inputs)
+
+        for i_3d in range(8):
+            bbox_list[0][1][:, i_3d] = bbox_list[0][1][:, i_3d] * std_3d[i_3d] + mean_3d[i_3d]
+
         calib_inv = calib[0].inverse()
         x = bbox_list[0][1][:, 3]
         y = bbox_list[0][1][:, 4]

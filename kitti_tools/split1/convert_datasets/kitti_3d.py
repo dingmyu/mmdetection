@@ -38,10 +38,11 @@ sys.dont_write_bytecode = True
 sys.path.append(os.getcwd())
 np.set_printoptions(suppress=True)
 
-#mean_3d = [ 1.4558165,   1.5661651,   3.3934565,  -0.088102,   -1.9420172,   1.6677535, 26.494734,   -0.07895345]
-#std_3d = [ 0.39049387,  0.15824589,  1.1481881,   1.7959986,   8.103981,    0.38854262, 16.059843,    1.727274  ]
-mean_3d = [ 1.4558165,   1.5661651,   3.3934565,  26.494734]
-std_3d = [ 0.39049387,  0.15824589,  1.1481881, 16.059843]
+mean_3d = [ 1.566141,    1.4557937,   3.393441,  0.8793656, 0.93093115, 26.497492, 1.5803262,   0.528173]
+std_3d = [ 0.15824416,   0.39049828,   1.1481832, 73.31452, 29.732836, 16.059835,    0.678825,    0.49920323]
+mean_3d = [ 1.566141,    1.4557937,   3.393441,  0, 0, 26.497492, 1.5803262,   0.528173]
+std_3d = [ 0.15824416,   0.39049828,   1.1481832, 1, 1, 16.059835,    0.678825,    0.49920323]
+
 
 def read_kitti_cal(calfile):
     """
@@ -184,9 +185,8 @@ def read_kitti_label(file, calib, dataset):
 
             obj.bbox_3d = [h3d, w3d, l3d, x_p, y_p, z_p, rotY, rotY_1, alpha, cx3d, cy3d, cz3d]
 
-            # for i in range(3):
-            #     obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
-            # obj.bbox_3d[5] = (obj.bbox_3d[5] - mean_3d[3]) / std_3d[3]
+            for i in range(8):
+                obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
 
             obj.bbox_2d = [x, y, x2, y2]
             obj.label = label_type

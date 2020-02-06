@@ -98,7 +98,7 @@ def read_kitti_label(file):
             cz3d = float(parsed.group(14))  # center of car in 3d
             rotY = float(parsed.group(15))
             # all_boxes.append(((x+x2)/2, (y+y2)/2, width, height))
-            if label_type in ['Car']:
+            if label_type in TYPE2LABEL:
                 all_boxes.append((x, x2, y, y2, width, height))
     return all_boxes
 

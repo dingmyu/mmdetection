@@ -98,7 +98,7 @@ train_pipeline = [
         img_scale=(1696, 512),
         #multiscale_mode='value',
         keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='RandomFlip', flip_ratio=0),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),

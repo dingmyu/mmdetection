@@ -149,8 +149,6 @@ class KITTIDistEvalmAPHook(DistEvalHook):
 
     def evaluate(self, runner, results):
         from mmdet.apis import get_root_logger
-        # mean_3d = [1.4558165, 1.5661651, 3.3934565, 26.494734]
-        # std_3d = [0.39049387, 0.15824589, 1.1481881, 16.059843]
         logger = get_root_logger()
         ds_name = self.dataset.CLASSES
         mmcv.mkdir_or_exist(
@@ -165,9 +163,6 @@ class KITTIDistEvalmAPHook(DistEvalHook):
                         if len(item) == 5:
                             print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], 0, 0, 0, 0, 0, 0, 0, item[4], file=f)
                         if len(item) == 5 + 8:
-                            # for i_3d in range(5, 8):
-                            #     item[i_3d] = item[i_3d] * std_3d[i_3d - 5] + mean_3d[i_3d - 5]
-                            # item[10] = item[10] * std_3d[3] + mean_3d[3]
                             if item[12] > 0.5:
                                 item[11] = item[11] - math.pi
                             if item[5] > 0 and item[6] > 0 and item[7] > 0:
