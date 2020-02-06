@@ -244,11 +244,19 @@ class FCOSHead3D(nn.Module):
             pos_decoded_target_preds = distance2bbox(pos_points,
                                                      pos_bbox_targets)
             # centerness weighted iou loss
+            # print('target', pos_decoded_target_preds.size(), pos_decoded_target_preds)
+            # print('pred', pos_decoded_bbox_preds.size(),pos_decoded_bbox_preds)
+            # print((pos_decoded_target_preds - pos_decoded_bbox_preds).mean(0))
             loss_bbox = self.loss_bbox(
                 pos_decoded_bbox_preds,
                 pos_decoded_target_preds,
                 weight=pos_centerness_targets,
                 avg_factor=pos_centerness_targets.sum())
+            # print('target', pos_bbox_targets_3d.size(), pos_bbox_targets_3d)
+            # print('pred', pos_bbox_preds_3d.size(),pos_bbox_preds_3d)
+            from mmdet.apis import get_root_logger
+            logger = get_root_logger()
+            logger.info((pos_bbox_targets_3d - pos_bbox_preds_3d).mean(0))
             loss_bbox_3d = self.loss_bbox_3d(
                 pos_bbox_preds_3d,
                 pos_bbox_targets_3d)
@@ -487,15 +495,22 @@ class FCOSHead3D(nn.Module):
         bottom = gt_bboxes[..., 3] - ys
         bbox_targets = torch.stack((left, top, right, bottom), -1)
 
-        gt_bboxes_3d[..., 3] = gt_bboxes_3d[..., 3] - xs  # X_p, Y_p
-        gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4] - ys
-        gt_bboxes_3d[..., 3] = (gt_bboxes_3d[..., 3] - 133)/35  # TODO: use variable
-        gt_bboxes_3d[..., 4] = (gt_bboxes_3d[..., 3] - 93)/33
-        # center_x = gt_bboxes_3d[..., 3] - xs
-        # center_y = gt_bboxes_3d[..., 4] - ys
-        # gt_bboxes_3d = torch.stack((gt_bboxes_3d[..., 0],gt_bboxes_3d[..., 1],gt_bboxes_3d[..., 2],
-        #                             center_x,center_y,gt_bboxes_3d[..., 5],
-        #                             gt_bboxes_3d[..., 6],gt_bboxes_3d[..., 7]), -1)
+        # from mmdet.apis import get_root_logger
+        # logger = get_root_logger()
+        # logger.info('old_{}'.format(gt_bboxes_3d[..., 3]))
+        # print(gt_bboxes_3d[..., 3].size(), xs.size())  # torch.Size([3392, 5]) torch.Size([3392, 5])
+        # logger.info('xs{}'.format(xs))
+        # logger.info('3d{}'.format(gt_bboxes_3d[..., 3] - xs))
+        # gt_bboxes_3d[..., 3] = gt_bboxes_3d[..., 3] - xs  # X_p, Y_p
+        # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4] - ys
+        # gt_bboxes_3d[..., 3] = gt_bboxes_3d[..., 3]  # TODO: use variable
+        # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4]
+        center_x = gt_bboxes_3d[..., 3] - xs
+        center_y = gt_bboxes_3d[..., 4] - ys
+        gt_bboxes_3d = torch.stack((gt_bboxes_3d[..., 0],gt_bboxes_3d[..., 1],gt_bboxes_3d[..., 2],
+                                    center_x,center_y,gt_bboxes_3d[..., 5],
+                                    gt_bboxes_3d[..., 6],gt_bboxes_3d[..., 7]), -1)
+        # logger.info('new_{}'.format(gt_bboxes_3d[..., 3]))
 
         # condition1: inside a gt bbox
         inside_gt_bbox_mask = bbox_targets.min(-1)[0] > 0

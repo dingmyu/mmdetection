@@ -178,15 +178,15 @@ def read_kitti_label(file, calib, dataset):
             if rotY < 0:
                 rotY = rotY + math.pi
                 rotY_1 = 1
-            x_p, y_p, z_p, _ = calib.dot(np.array([cx3d, cy3d, cz3d, 1]))
+            x_p, y_p, z_p, _ = calib.dot(np.array([cx3d, cy3d - h3d / 2, cz3d, 1]))
             x_p /= z_p
             y_p /= z_p
 
-            obj.bbox_3d = [w3d, h3d, l3d, x_p, y_p, z_p, rotY, rotY_1, alpha, cx3d, cy3d, cz3d]
+            obj.bbox_3d = [h3d, w3d, l3d, x_p, y_p, z_p, rotY, rotY_1, alpha, cx3d, cy3d, cz3d]
 
-            for i in range(3):
-                obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
-            obj.bbox_3d[5] = (obj.bbox_3d[5] - mean_3d[3]) / std_3d[3]
+            # for i in range(3):
+            #     obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
+            # obj.bbox_3d[5] = (obj.bbox_3d[5] - mean_3d[3]) / std_3d[3]
 
             obj.bbox_2d = [x, y, x2, y2]
             obj.label = label_type

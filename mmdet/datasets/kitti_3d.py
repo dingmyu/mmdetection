@@ -46,7 +46,7 @@ class Kitti3dDataset(CustomDataset):
     # def get_ann_info(self, idx):
     #     return self.img_infos[idx]['ann']
 
-    def _filter_imgs(self, min_size=32):
+    def _filter_imgs(self, min_size=32):  # TODO: add truncated and occluded.
         """Filter images too small or without ground truths."""
         valid_inds = []
         for i, img_info in enumerate(self.img_infos):

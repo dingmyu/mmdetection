@@ -59,7 +59,8 @@ model = dict(
         loss_bbox=dict(type='IoULoss', loss_weight=1.0),
         loss_bbox_3d=dict(type='SmoothL1Loss', loss_weight=1.0),
         loss_centerness=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)))
+            #type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)))
+            type='SmoothL1Loss', loss_weight=1.0)))
 # training and testing settings
 train_cfg = dict(
     assigner=dict(
@@ -75,7 +76,7 @@ train_cfg = dict(
 test_cfg = dict(
     nms_pre=1000,
     min_bbox_size=0,
-    score_thr=0.05,
+    score_thr=0.5,
     nms=dict(type='nms', iou_thr=0.4),
     max_per_img=100,
     stat_2d=stat_2d)
