@@ -136,8 +136,8 @@ class Resize(object):
             # logger.info('scale_factor: {}'.format(results['scale_factor']))
             # logger.info('bboxes: {}'.format(bboxes))
 
-            bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1] - 1)
-            bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0] - 1)
+            # bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1] - 1)
+            # bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0] - 1)  # TODO: MINGYU if clip?
             results[key] = bboxes
 
     def _resize_bboxes_3d(self, results):
@@ -239,12 +239,27 @@ class RandomFlip(object):
         return flipped
 
     def bbox_flip_3d(self, bboxes, img_shape, direction):
-        assert bboxes.shape[-1] % 12 == 0
+        assert bboxes.shape[-1] % 8 == 0
         flipped = bboxes.copy()
         if direction == 'horizontal':
             w = img_shape[1]
-            flipped[..., 3::12] = w - bboxes[..., 3::12] - 1
-            flipped[..., 6::12] = math.pi - bboxes[..., 6::12]
+            flipped[..., 3::8] = w - bboxes[..., 3::8] - 1
+            # from mmdet.apis import get_root_logger
+            # logger = get_root_logger()
+            # logger.info('old_flipped: {}'.format(flipped[:, 5:8]))
+            for index, item in enumerate(flipped[:, 6]):
+                item = (-math.pi - item) if item < 0 else (math.pi - item)
+                while item > math.pi: item -= math.pi * 2
+                while item < (-math.pi): item += math.pi * 2
+                flipped[index, 6] = item
+            for index, item in enumerate(flipped[:, 7]):
+                item = (-math.pi - item) if item < 0 else (math.pi - item)
+                while item > math.pi: item -= math.pi * 2
+                while item < (-math.pi): item += math.pi * 2
+                flipped[index, 7] = item
+            # logger.info('new_flipped: {}'.format(flipped[:, 5:8]))
+
+            # flipped[..., 6::8] = math.pi - bboxes[..., 6::8]
         else:
             raise ValueError(
                 'Invalid flipping direction "{}"'.format(direction))

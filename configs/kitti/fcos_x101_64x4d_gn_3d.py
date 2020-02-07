@@ -3,7 +3,7 @@ import datetime
 
 
 total_epochs = 24
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=10)
 evaluation = dict(interval=1)
 workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
@@ -60,7 +60,10 @@ model = dict(
         loss_bbox_3d=dict(type='SmoothL1Loss', loss_weight=1.0),
         loss_centerness=dict(
             #type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)))
-            type='SmoothL1Loss', loss_weight=1.0)))
+            type='SmoothL1Loss', loss_weight=1.0),
+        norm_cfg=dict(type='GN', num_groups=32, requires_grad=True),
+        std_3d = [73.31452, 29.732836]
+    ))
 # training and testing settings
 train_cfg = dict(
     assigner=dict(
@@ -77,6 +80,8 @@ test_cfg = dict(
     nms_pre=1000,
     min_bbox_size=0,
     score_thr=0.5,
+    mean_3d=[1.566141, 1.4557937, 3.393441, 0, 0, 26.497492, -0.07895348, -0.0881019],
+    std_3d = [0.15824416, 0.39049828, 1.1481832, 1, 1, 16.059835, 1.7272873, 1.795999],
     nms=dict(type='nms', iou_thr=0.4),
     max_per_img=100,
     stat_2d=stat_2d)
@@ -98,7 +103,7 @@ train_pipeline = [
         img_scale=(1696, 512),
         #multiscale_mode='value',
         keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0),
+    dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),

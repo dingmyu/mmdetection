@@ -51,7 +51,8 @@ class FCOSHead3D(nn.Module):
                      use_sigmoid=True,
                      loss_weight=1.0),
                  conv_cfg=None,
-                 norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)):
+                 norm_cfg=dict(type='GN', num_groups=32, requires_grad=True),
+                 std_3d = None):
         super(FCOSHead3D, self).__init__()
 
         self.num_classes = num_classes
@@ -68,6 +69,7 @@ class FCOSHead3D(nn.Module):
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
         self.fp16_enabled = False
+        self.std_3d = std_3d
 
         self._init_layers()
 
@@ -145,7 +147,7 @@ class FCOSHead3D(nn.Module):
         centerness = self.fcos_centerness(reg_feat)
         # scale the bbox_pred of different level
         # float to avoid overflow when enabling FP16
-        bbox_pred = scale(self.fcos_reg(reg_feat)).float().exp()
+        bbox_pred = scale(self.fcos_reg(reg_feat)).float()#.exp()
         #bbox_pred = self.fcos_reg(reg_feat).float()
         bbox_pred_3d = self.fcos_reg_3d(reg_feat_3d).float()
         # print(scale.scale)
@@ -167,7 +169,7 @@ class FCOSHead3D(nn.Module):
         featmap_sizes = [featmap.size()[-2:] for featmap in cls_scores]
         all_level_points = self.get_points(featmap_sizes, bbox_preds[0].dtype,
                                            bbox_preds[0].device)
-        labels, bbox_targets, bbox_targets_3d = self.fcos_target(all_level_points, gt_bboxes, gt_bboxes_3d,
+        labels, bbox_targets, bbox_targets_3d, bbox_center_3d = self.fcos_target(all_level_points, gt_bboxes, gt_bboxes_3d,
                                                 gt_labels)
         # print(labels[0].size(), bbox_targets[0].size())  # torch.Size([6784]) torch.Size([6784, 4]) batch*nunmber_point
 
@@ -220,6 +222,7 @@ class FCOSHead3D(nn.Module):
         flatten_labels = torch.cat(labels)
         flatten_bbox_targets = torch.cat(bbox_targets)
         flatten_bbox_targets_3d = torch.cat(bbox_targets_3d)
+        flatten_bbox_center_3d = torch.cat(bbox_center_3d)
         # repeat points to align with bbox_preds
         flatten_points = torch.cat(
             [points.repeat(num_imgs, 1) for points in all_level_points])
@@ -237,8 +240,9 @@ class FCOSHead3D(nn.Module):
         if num_pos > 0:
             pos_bbox_targets = flatten_bbox_targets[pos_inds]
             pos_bbox_targets_3d = flatten_bbox_targets_3d[pos_inds]
+            pos_bbox_center_3d = flatten_bbox_center_3d[pos_inds]
             # print(pos_bbox_targets.size())  # torch.Size([669, 4])
-            pos_centerness_targets = self.centerness_target(pos_bbox_targets)
+            pos_centerness_targets = self.centerness_target(pos_bbox_targets, pos_bbox_center_3d)
             pos_points = flatten_points[pos_inds]
             pos_decoded_bbox_preds = distance2bbox(pos_points, pos_bbox_preds)
             pos_decoded_target_preds = distance2bbox(pos_points,
@@ -254,9 +258,9 @@ class FCOSHead3D(nn.Module):
                 avg_factor=pos_centerness_targets.sum())
             # print('target', pos_bbox_targets_3d.size(), pos_bbox_targets_3d)
             # print('pred', pos_bbox_preds_3d.size(),pos_bbox_preds_3d)
-            from mmdet.apis import get_root_logger
-            logger = get_root_logger()
-            logger.info((pos_bbox_targets_3d - pos_bbox_preds_3d).mean(0))
+            # from mmdet.apis import get_root_logger
+            # logger = get_root_logger()
+            # logger.info((pos_bbox_targets_3d - pos_bbox_preds_3d).mean(0))
             loss_bbox_3d = self.loss_bbox_3d(
                 pos_bbox_preds_3d,
                 pos_bbox_targets_3d)
@@ -361,16 +365,20 @@ class FCOSHead3D(nn.Module):
                 scores = scores[topk_inds, :]
                 centerness = centerness[topk_inds]
             bboxes = distance2bbox(points, bbox_pred, max_shape=img_shape)
-            bboxes_3d = distance2center(points, bbox_pred_3d)
+            bboxes_3d = distance2center(points, bbox_pred_3d, self.std_3d)
             mlvl_bboxes.append(bboxes)
             mlvl_bboxes_3d.append(bboxes_3d)
             mlvl_scores.append(scores)
             mlvl_centerness.append(centerness)
         mlvl_bboxes = torch.cat(mlvl_bboxes)
         mlvl_bboxes_3d = torch.cat(mlvl_bboxes_3d)
+        # from mmdet.apis import get_root_logger
+        # logger = get_root_logger()
         if rescale:
+            # logger.info(mlvl_bboxes_3d[:, 3:5])
             mlvl_bboxes /= mlvl_bboxes.new_tensor(scale_factor)  # TODO: add 3D
             mlvl_bboxes_3d[:, 3:5] /= mlvl_bboxes_3d[:, 3:5].new_tensor(scale_factor)
+            # logger.info('new_{}'.format(mlvl_bboxes_3d[:, 3:5]))
             # print(scale_factor, mlvl_bboxes_3d.size())  # 1.3653333333333333 torch.Size([1000, 8])
         mlvl_scores = torch.cat(mlvl_scores)
         padding = mlvl_scores.new_zeros(mlvl_scores.shape[0], 1)
@@ -427,7 +435,7 @@ class FCOSHead3D(nn.Module):
         concat_regress_ranges = torch.cat(expanded_regress_ranges, dim=0)
         concat_points = torch.cat(points, dim=0)
         # get labels and bbox_targets of each image
-        labels_list, bbox_targets_list, bbox_targets_list_3d = multi_apply(
+        labels_list, bbox_targets_list, bbox_targets_list_3d, bbox_center_list_3d = multi_apply(
             self.fcos_target_single,
             gt_bboxes_list,
             gt_bboxes_list_3d,
@@ -446,10 +454,15 @@ class FCOSHead3D(nn.Module):
             bbox_targets_3d.split(num_points, 0)  # torch.split(tensor, split_size, dim=0)
             for bbox_targets_3d in bbox_targets_list_3d
         ]
+        bbox_center_list_3d = [
+            bbox_center_3d.split(num_points, 0)  # torch.split(tensor, split_size, dim=0)
+            for bbox_center_3d in bbox_center_list_3d
+        ]
         # concat per level image
         concat_lvl_labels = []
         concat_lvl_bbox_targets = []
         concat_lvl_bbox_targets_3d = []
+        concat_lvl_bbox_center_3d = []
         for i in range(num_levels):
             concat_lvl_labels.append(
                 torch.cat([labels[i] for labels in labels_list]))
@@ -459,7 +472,10 @@ class FCOSHead3D(nn.Module):
             concat_lvl_bbox_targets_3d.append(
                 torch.cat(
                     [bbox_targets_3d[i] for bbox_targets_3d in bbox_targets_list_3d]))
-        return concat_lvl_labels, concat_lvl_bbox_targets, concat_lvl_bbox_targets_3d
+            concat_lvl_bbox_center_3d.append(
+                torch.cat(
+                    [bbox_center_3d[i] for bbox_center_3d in bbox_center_list_3d]))
+        return concat_lvl_labels, concat_lvl_bbox_targets, concat_lvl_bbox_targets_3d, concat_lvl_bbox_center_3d
 
     def fcos_target_single(self, gt_bboxes, gt_bboxes_3d, gt_labels, points, regress_ranges):
         # print(gt_bboxes.size(), gt_labels.size(), points.size(), regress_ranges.size())
@@ -495,6 +511,14 @@ class FCOSHead3D(nn.Module):
         bottom = gt_bboxes[..., 3] - ys
         bbox_targets = torch.stack((left, top, right, bottom), -1)
 
+
+        left = gt_bboxes_3d[..., 3] - gt_bboxes[..., 0]  # original size, 512*1696
+        right = gt_bboxes[..., 2] - gt_bboxes_3d[..., 3]
+        top = gt_bboxes_3d[..., 4] - gt_bboxes[..., 1]
+        bottom = gt_bboxes[..., 3] - gt_bboxes_3d[..., 4]
+        bbox_center_3d = torch.stack((left, top, right, bottom), -1)
+
+
         # from mmdet.apis import get_root_logger
         # logger = get_root_logger()
         # logger.info('old_{}'.format(gt_bboxes_3d[..., 3]))
@@ -505,9 +529,8 @@ class FCOSHead3D(nn.Module):
         # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4] - ys
         # gt_bboxes_3d[..., 3] = gt_bboxes_3d[..., 3]  # TODO: use variable
         # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4]
-        std_3d = [73.31452, 29.732836]
-        center_x = ((gt_bboxes_3d[..., 3] - xs))/ (std_3d[0]*512/375)
-        center_y = ((gt_bboxes_3d[..., 4] - ys))/ (std_3d[1]*512/375)
+        center_x = ((gt_bboxes_3d[..., 3] - xs))/ (self.std_3d[0])#*512/375)
+        center_y = ((gt_bboxes_3d[..., 4] - ys))/ (self.std_3d[1])#*512/375)
 
         gt_bboxes_3d = torch.stack((gt_bboxes_3d[..., 0],gt_bboxes_3d[..., 1],gt_bboxes_3d[..., 2],
                                     center_x,center_y,gt_bboxes_3d[..., 5],
@@ -515,7 +538,7 @@ class FCOSHead3D(nn.Module):
         # logger.info('new_{}'.format(gt_bboxes_3d[..., 3]))
 
         # condition1: inside a gt bbox
-        inside_gt_bbox_mask = bbox_targets.min(-1)[0] > 0
+        inside_gt_bbox_mask = bbox_targets.min(-1)[0] > 0#) & (bbox_center_3d.min(-1)[0] > 0)
         # inside_gt_center_mask = bbox_targets.min(-1)[0] > bbox_targets.max(-1)[0]/3  # ~~~~~~ center
         # from mmdet.apis import get_root_logger
         # logger = get_root_logger()
@@ -538,14 +561,28 @@ class FCOSHead3D(nn.Module):
         labels[min_area == INF] = 0
         bbox_targets = bbox_targets[range(num_points), min_area_inds]
         bbox_targets_3d = gt_bboxes_3d[range(num_points), min_area_inds]
+        bbox_center_3d = bbox_center_3d[range(num_points), min_area_inds]
         # print(labels.size(), bbox_targets.size())  # torch.Size([3392]) torch.Size([3392, 4])
-        return labels, bbox_targets, bbox_targets_3d
+        return labels, bbox_targets, bbox_targets_3d, bbox_center_3d
 
-    def centerness_target(self, pos_bbox_targets):  # calculate for each feature pixel according to their GT
+    def centerness_target(self, pos_bbox_targets, pos_bbox_center_3d):  # calculate for each feature pixel according to their GT
         # only calculate pos centerness targets, otherwise there may be nan
-        left_right = pos_bbox_targets[:, [0, 2]]
-        top_bottom = pos_bbox_targets[:, [1, 3]]
-        centerness_targets = (
-            left_right.min(dim=-1)[0] / left_right.max(dim=-1)[0]) * (
-                top_bottom.min(dim=-1)[0] / top_bottom.max(dim=-1)[0])
-        return torch.sqrt(centerness_targets)
+        # print(pos_bbox_targets.size(), pos_bbox_center_3d.size())  # torch.Size([458, 4]) torch.Size([458, 4])
+        left = torch.stack((pos_bbox_targets[:, 0], pos_bbox_center_3d[:, 0]), -1)
+        right = torch.stack((pos_bbox_targets[:, 2], pos_bbox_center_3d[:, 2]), -1)
+        top = torch.stack((pos_bbox_targets[:, 1], pos_bbox_center_3d[:, 1]), -1)
+        bottom = torch.stack((pos_bbox_targets[:, 3], pos_bbox_center_3d[:, 3]), -1)
+
+        left_right = (left.min(dim=-1)[0] / left.max(dim=-1)[0]) * (right.min(dim=-1)[0] / right.max(dim=-1)[0])
+        top_bottom = (top.min(dim=-1)[0] / top.max(dim=-1)[0]) * (bottom.min(dim=-1)[0] / bottom.max(dim=-1)[0])
+        # from mmdet.apis import get_root_logger
+        # logger = get_root_logger()
+        # logger.info('my_{}'.format(left_right * top_bottom))
+        # left_right = pos_bbox_targets[:, [0, 2]]
+        # top_bottom = pos_bbox_targets[:, [1, 3]]
+        # centerness_targets = (
+        #     left_right.min(dim=-1)[0] / left_right.max(dim=-1)[0]) * (
+        #         top_bottom.min(dim=-1)[0] / top_bottom.max(dim=-1)[0])
+        # logger.info(centerness_targets)
+        # return torch.sqrt(centerness_targets)
+        return torch.sqrt(left_right * top_bottom)

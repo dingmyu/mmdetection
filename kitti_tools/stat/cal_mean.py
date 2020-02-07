@@ -174,15 +174,15 @@ def read_kitti_label(file, calib, dataset):
             cz3d = float(parsed.group(14))  # center of car in 3d
             rotY = float(parsed.group(15))
 
-            rotY_1 = 0
-            if rotY < 0:
-                rotY = rotY + math.pi
-                rotY_1 = 1
+            # rotY_1 = 0
+            # if rotY < 0:
+            #     rotY = rotY + math.pi
+            #     rotY_1 = 1
             x_p, y_p, z_p, _ = calib.dot(np.array([cx3d, cy3d - h3d / 2, cz3d, 1]))
             x_p /= z_p
             y_p /= z_p
 
-            obj.bbox_3d = [h3d, w3d, l3d, x_p, y_p, z_p, rotY, rotY_1, (x_p - x)/2, -(x2 - x_p)/2, (y_p - y)/2, -(y2- y_p)/2]
+            obj.bbox_3d = [h3d, w3d, l3d, x_p, y_p, z_p, rotY, alpha, (x_p - x)/2, -(x2 - x_p)/2, (y_p - y)/2, -(y2- y_p)/2]
 
             # for i in range(3):
             #     obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]

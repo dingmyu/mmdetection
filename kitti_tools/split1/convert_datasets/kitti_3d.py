@@ -38,10 +38,8 @@ sys.dont_write_bytecode = True
 sys.path.append(os.getcwd())
 np.set_printoptions(suppress=True)
 
-mean_3d = [ 1.566141,    1.4557937,   3.393441,  0.8793656, 0.93093115, 26.497492, 1.5803262,   0.528173]
-std_3d = [ 0.15824416,   0.39049828,   1.1481832, 73.31452, 29.732836, 16.059835,    0.678825,    0.49920323]
-mean_3d = [ 1.566141,    1.4557937,   3.393441,  0, 0, 26.497492, 1.5803262,   0.528173]
-std_3d = [ 0.15824416,   0.39049828,   1.1481832, 1, 1, 16.059835,    0.678825,    0.49920323]
+mean_3d = [ 1.566141,    1.4557937,   3.393441,  0, 0, 26.497492, -0.07895348,  -0.0881019]
+std_3d = [ 0.15824416,   0.39049828,   1.1481832, 1, 1, 16.059835,1.7272873,  1.795999]
 
 
 def read_kitti_cal(calfile):
@@ -82,6 +80,68 @@ def read_kitti_cal(calfile):
     text_file.close()
 
     return p2
+
+
+def convertRot2Alpha(ry3d, z3d, x3d):
+
+    alpha = ry3d - math.atan2(-z3d, x3d) - 0.5 * math.pi
+    # alpha = ry3d - math.atan2(x3d, z3d)  # equivalent
+
+    while alpha > math.pi: alpha -= math.pi * 2
+    while alpha < (-math.pi): alpha += math.pi * 2
+
+    return alpha
+
+
+def project_3d(p2, x3d, y3d, z3d, w3d, h3d, l3d, ry3d, return_3d=False):
+    """
+    Projects a 3D box into 2D vertices
+    Args:
+        p2 (nparray): projection matrix of size 4x3
+        x3d: x-coordinate of center of object
+        y3d: y-coordinate of center of object
+        z3d: z-cordinate of center of object
+        w3d: width of object
+        h3d: height of object
+        l3d: length of object
+        ry3d: rotation w.r.t y-axis
+    """
+
+    # compute rotational matrix around yaw axis
+    R = np.array([[+math.cos(ry3d), 0, +math.sin(ry3d)],
+                  [0, 1, 0],
+                  [-math.sin(ry3d), 0, +math.cos(ry3d)]])
+
+    # 3D bounding box corners
+    x_corners = np.array([0, l3d, l3d, l3d, l3d,   0,   0,   0])
+    y_corners = np.array([0, 0,   h3d, h3d,   0,   0, h3d, h3d])
+    z_corners = np.array([0, 0,     0, w3d, w3d, w3d, w3d,   0])
+
+    x_corners += -l3d / 2
+    y_corners += -h3d / 2
+    z_corners += -w3d / 2
+
+    # bounding box in object co-ordinate
+    corners_3d = np.array([x_corners, y_corners, z_corners])
+
+    # rotate
+    corners_3d = R.dot(corners_3d)
+
+    # translate object coordinate to camera coordinate
+    corners_3d += np.array([x3d, y3d, z3d]).reshape((3, 1))
+
+    corners_3D_1 = np.vstack((corners_3d, np.ones((corners_3d.shape[-1]))))
+    corners_2D = p2.dot(corners_3D_1)
+    corners_2D = corners_2D / corners_2D[2]  # normalize dim 3 -> 2, image coordinate
+
+    bb3d_lines_verts_idx = [0, 1, 2, 3, 4, 5, 6, 7]
+
+    verts3d = (corners_2D[:, bb3d_lines_verts_idx][:2]).astype(float).T
+
+    if return_3d:
+        return verts3d, corners_3d  # 2d corners in image coordinate and 3d corners in camera coordinate
+    else:
+        return verts3d
 
 
 def read_kitti_label(file, calib, dataset):
@@ -175,15 +235,33 @@ def read_kitti_label(file, calib, dataset):
             cz3d = float(parsed.group(14))  # center of car in 3d
             rotY = float(parsed.group(15))
 
-            rotY_1 = 0
-            if rotY < 0:
-                rotY = rotY + math.pi
-                rotY_1 = 1
-            x_p, y_p, z_p, _ = calib.dot(np.array([cx3d, cy3d - h3d / 2, cz3d, 1]))
+            cy3d -= (h3d / 2)
+
+            ign = 0
+            verts3d, corners_3d = project_3d(calib, cx3d, cy3d, cz3d, w3d, h3d, l3d, rotY, return_3d=True)
+
+            if np.any(corners_3d[2, :] <= 0):
+                ign = True
+            else:  # 3d for 2d
+                x = min(verts3d[:, 0])
+                y = min(verts3d[:, 1])
+                x2 = max(verts3d[:, 0])
+                y2 = max(verts3d[:, 1])
+
+                width = x2 - x + 1
+                height = y2 - y + 1
+
+            # rotY_1 = 0
+            # if rotY < 0:
+            #     rotY = rotY + math.pi
+            #     rotY_1 = 1
+
+            x_p, y_p, z_p, _ = calib.dot(np.array([cx3d, cy3d, cz3d, 1]))
             x_p /= z_p
             y_p /= z_p
 
-            obj.bbox_3d = [h3d, w3d, l3d, x_p, y_p, z_p, rotY, rotY_1, alpha, cx3d, cy3d, cz3d]
+            alpha = convertRot2Alpha(rotY, cz3d, cx3d)
+            obj.bbox_3d = [h3d, w3d, l3d, x_p, y_p, z_p, rotY, alpha]
 
             for i in range(8):
                 obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
@@ -191,13 +269,16 @@ def read_kitti_label(file, calib, dataset):
             obj.bbox_2d = [x, y, x2, y2]
             obj.label = label_type
 
-            gts.append(obj)
+            # gts.append(obj)
 
-            if label_type in TYPE2LABEL:
+            if label_type in TYPE2LABEL and occ <= 1 and not ign and height >= 23 and height <= 280:
+                # print(obj.bbox_3d)
                 bboxes.append(obj.bbox_2d)
                 bboxes_3d.append(obj.bbox_3d)
                 labels.append(TYPE2LABEL[label_type])
-            if label_type == 'DontCare':
+                # if obj.bbox_3d[3] > x2 or obj.bbox_3d[3] < x:
+                #     print(obj.bbox_2d, obj.bbox_3d)
+            if label_type in TYPE2LABEL and occ <= 1 and ign:  # or occ >= 2:  # label_type == 'DontCare' or
                 bboxes_ignore.append(obj.bbox_2d)
                 bboxes_3d_ignore.append(obj.bbox_3d)
                 labels_ignore.append(0)
@@ -209,8 +290,10 @@ def read_kitti_label(file, calib, dataset):
                 bboxes_3d=np.array(bboxes_3d, dtype=np.float32),
                 calib=calib,
                 labels=np.array(labels, dtype=np.int64),
-                bboxes_ignore=np.array(bboxes_ignore, dtype=np.float32),
-                bboxes_3d_ignore=np.array(bboxes_3d_ignore, dtype=np.float32),
+                bboxes_ignore=np.zeros((0, 4), dtype=np.float32),
+                bboxes_3d_ignore=np.zeros((0, 8), dtype=np.float32)
+                # bboxes_ignore=np.array(bboxes_ignore, dtype=np.float32),
+                # bboxes_3d_ignore=np.array(bboxes_3d_ignore, dtype=np.float32),
             )
         else:
             ann = dict(
@@ -229,7 +312,7 @@ def read_kitti_label(file, calib, dataset):
             calib=calib,
         )
 
-    return gts, ann
+    return ann
 
 
 
@@ -261,6 +344,7 @@ for item in ['train', 'val']:
         parsed = re.search('(\d+)', line)
         if parsed is not None:
             id = str(parsed[0])
+            # print(id)
 
             file_info = dict()
             file_info['filename'] = os.path.join(kitti_raw['img'], id + '.png')
@@ -272,7 +356,7 @@ for item in ['train', 'val']:
             file_info['height'] = file_shape[1]
 
             file_info['calib'] = read_kitti_cal(file_info['calibname'])
-            file_info['label'], file_info['ann'] = read_kitti_label(file_info['labelname'], file_info['calib'], item)
+            file_info['ann'] = read_kitti_label(file_info['labelname'], file_info['calib'], item)
             # stats = np.concatenate((stats, file_info['ann']['bboxes_3d']), axis=0)
             # print(stats.mean(0), stats.std(0))
             if item == 'train':

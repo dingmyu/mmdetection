@@ -231,7 +231,7 @@ def distance2bbox(points, distance, max_shape=None):
         y2 = y2.clamp(min=0, max=max_shape[0] - 1)
     return torch.stack([x1, y1, x2, y2], -1)
 
-def distance2center(points, distance):
+def distance2center(points, distance, std_3d):
     """Decode distance prediction to bounding box.
 
     Args:
@@ -243,7 +243,6 @@ def distance2center(points, distance):
     Returns:
         Tensor: Decoded bboxes.
     """
-    std_3d = [73.31452, 29.732836]
-    distance[:, 3] = points[:, 0] + distance[:, 3] * (std_3d[0]*512/375)  # TODO: use variable
-    distance[:, 4] = points[:, 1] + distance[:, 4] * (std_3d[1]*512/375)
+    distance[:, 3] = points[:, 0] + distance[:, 3] * (std_3d[0])#*512/375)  # TODO: use variable
+    distance[:, 4] = points[:, 1] + distance[:, 4] * (std_3d[1])#*512/375)
     return distance
