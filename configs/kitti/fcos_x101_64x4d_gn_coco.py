@@ -1,6 +1,15 @@
 # model settings
 import datetime
 
+
+copy_dict = dict(
+    FCOS='mmdet/models/detectors/fcos.py',
+    FCOSHead2D='mmdet/models/anchor_heads/fcos_head_2d.py',
+    FCOS3D='mmdet/models/detectors/fcos_3d.py',
+    FCOSHead3D='mmdet/models/anchor_heads/fcos_head_3d.py',
+)
+channels = 3
+
 model = dict(
     type='FCOS',
     pretrained='open-mmlab://resnext101_64x4d',
@@ -27,7 +36,7 @@ model = dict(
         type='FCOSHead2D',
         num_classes=81,
         in_channels=2048,
-        stacked_convs=1,
+        stacked_convs=2,
         feat_channels=512,
         strides=[16,],
         loss_cls=dict(
@@ -49,20 +58,22 @@ train_cfg = dict(
         ignore_iof_thr=-1),
     allowed_border=-1,
     pos_weight=-1,
-    debug=False)
+    debug=False,
+    stat_2d=False)
 test_cfg = dict(
     nms_pre=1000,
     min_bbox_size=0,
     score_thr=0.05,
     nms=dict(type='nms', iou_thr=0.4),
-    max_per_img=100)
+    max_per_img=100,
+    stat_2d = False)
 # dataset settings
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', channels=channels),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='Resize',
@@ -76,7 +87,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', channels=channels),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1333, 800),
@@ -132,7 +143,7 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 12
+total_epochs = 10
 checkpoint_config = dict(interval=4)
 evaluation = dict(interval=1)
 workflow = [('train', 1)]

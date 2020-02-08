@@ -174,6 +174,8 @@ class KITTIDistEvalmAPHook(DistEvalHook):
                 str(runner.epoch + 1)), 'data', '%06d.txt' % i), 'w')
             for category, result in enumerate(results[i]):
                 if result.any():
+                    # item[:, [0, 2]] = np.clip(item[:, [0, 2]], 0, 1242)
+                    # item[:, [1, 3]] = np.clip(item[:, [1, 3]], 0, 375)
                     for item in result:
                         if len(item) == 5:
                             print(ds_name[category], -1, -1, 0, item[0], item[1], item[2], item[3], 0, 0, 0, 0, 0, 0, 0, item[4], file=f)

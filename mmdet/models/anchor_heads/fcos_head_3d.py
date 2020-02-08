@@ -6,10 +6,20 @@ from mmdet.core import distance2bbox, distance2center, force_fp32, multi_apply, 
 from ..builder import build_loss
 from ..registry import HEADS
 from ..utils import ConvModule, Scale, bias_init_with_prob
+import torch.nn.functional as F
 
 import cv2
 import numpy as np
 INF = 1e8
+
+
+def smooth_l1_loss(pred, target, beta=1.0/9.0):
+    assert beta > 0
+    assert pred.size() == target.size() and target.numel() > 0
+    diff = torch.abs(pred - target)
+    loss = torch.where(diff < beta, 0.5 * diff * diff / beta,
+                       diff - 0.5 * beta)
+    return loss
 
 
 @HEADS.register_module
@@ -139,12 +149,12 @@ class FCOSHead3D(nn.Module):
         for cls_layer in self.cls_convs:
             cls_feat = cls_layer(cls_feat)
         cls_score = self.fcos_cls(cls_feat)
+        centerness = self.fcos_centerness(cls_feat)
 
         for reg_layer in self.reg_convs:
             reg_feat = reg_layer(reg_feat)
         for reg_layer_3d in self.reg_convs_3d:
             reg_feat_3d = reg_layer_3d(reg_feat_3d)
-        centerness = self.fcos_centerness(reg_feat)
         # scale the bbox_pred of different level
         # float to avoid overflow when enabling FP16
         bbox_pred = scale(self.fcos_reg(reg_feat)).float()#.exp()
@@ -210,8 +220,8 @@ class FCOSHead3D(nn.Module):
         flatten_centerness = torch.cat(flatten_centerness)
 
         # check NaN and Inf
-        assert torch.isfinite(flatten_cls_scores).all().item(), \
-            'classification scores become infinite or NaN!'
+        # assert torch.isfinite(flatten_cls_scores).all().item(), \
+        #     'classification scores become infinite or NaN!'
         assert torch.isfinite(flatten_bbox_preds).all().item(), \
             'bbox predications become infinite or NaN!'
         assert torch.isfinite(flatten_bbox_preds_3d).all().item(), \
@@ -244,9 +254,9 @@ class FCOSHead3D(nn.Module):
             # print(pos_bbox_targets.size())  # torch.Size([669, 4])
             pos_centerness_targets = self.centerness_target(pos_bbox_targets, pos_bbox_center_3d)
             pos_points = flatten_points[pos_inds]
-            pos_decoded_bbox_preds = distance2bbox(pos_points, pos_bbox_preds)
+            pos_decoded_bbox_preds = distance2bbox(pos_points, pos_bbox_preds, self.std_3d)
             pos_decoded_target_preds = distance2bbox(pos_points,
-                                                     pos_bbox_targets)
+                                                     pos_bbox_targets, self.std_3d)
             # centerness weighted iou loss
             # print('target', pos_decoded_target_preds.size(), pos_decoded_target_preds)
             # print('pred', pos_decoded_bbox_preds.size(),pos_decoded_bbox_preds)
@@ -256,14 +266,19 @@ class FCOSHead3D(nn.Module):
                 pos_decoded_target_preds,
                 weight=pos_centerness_targets,
                 avg_factor=pos_centerness_targets.sum())
+            # print(pos_bbox_preds_3d.sum(1).size(), pos_centerness_targets.size())  # torch.Size([593]) torch.Size([593])
             # print('target', pos_bbox_targets_3d.size(), pos_bbox_targets_3d)
             # print('pred', pos_bbox_preds_3d.size(),pos_bbox_preds_3d)
             # from mmdet.apis import get_root_logger
             # logger = get_root_logger()
             # logger.info((pos_bbox_targets_3d - pos_bbox_preds_3d).mean(0))
-            loss_bbox_3d = self.loss_bbox_3d(
-                pos_bbox_preds_3d,
-                pos_bbox_targets_3d)
+            # loss_bbox_3d = self.loss_bbox_3d(
+            #     pos_bbox_preds_3d,
+            #     pos_bbox_targets_3d,
+            #     weight=pos_centerness_targets
+            # )
+            loss_bbox_3d = 2*(smooth_l1_loss(pos_bbox_preds_3d, pos_bbox_targets_3d).mean(1) * pos_centerness_targets).sum()/pos_centerness_targets.sum()  #
+            # loss_bbox_3d = (F.smooth_l1_loss(pos_bbox_preds_3d, pos_bbox_targets_3d, reduction='none').sum(1) * pos_centerness_targets).mean()
             loss_centerness = self.loss_centerness(pos_centerness,
                                                    pos_centerness_targets)
         else:
@@ -364,7 +379,7 @@ class FCOSHead3D(nn.Module):
                 bbox_pred_3d = bbox_pred_3d[topk_inds, :]
                 scores = scores[topk_inds, :]
                 centerness = centerness[topk_inds]
-            bboxes = distance2bbox(points, bbox_pred, max_shape=img_shape)
+            bboxes = distance2bbox(points, bbox_pred, self.std_3d, max_shape=img_shape)
             bboxes_3d = distance2center(points, bbox_pred_3d, self.std_3d)
             mlvl_bboxes.append(bboxes)
             mlvl_bboxes_3d.append(bboxes_3d)
@@ -505,10 +520,10 @@ class FCOSHead3D(nn.Module):
         xs = xs[:, None].expand(num_points, num_gts)
         ys = ys[:, None].expand(num_points, num_gts)
 
-        left = xs - gt_bboxes[..., 0]  # original size, 512*1696
-        right = gt_bboxes[..., 2] - xs
-        top = ys - gt_bboxes[..., 1]
-        bottom = gt_bboxes[..., 3] - ys
+        left = (xs - gt_bboxes[..., 0])/ (self.std_3d[0]*1.365)  # original size, 512*1696
+        right = (gt_bboxes[..., 2] - xs)/ (self.std_3d[0]*1.365)
+        top = (ys - gt_bboxes[..., 1])/ (self.std_3d[1]*1.365)
+        bottom = (gt_bboxes[..., 3] - ys)/ (self.std_3d[1]*1.365)
         bbox_targets = torch.stack((left, top, right, bottom), -1)
 
 
@@ -529,8 +544,8 @@ class FCOSHead3D(nn.Module):
         # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4] - ys
         # gt_bboxes_3d[..., 3] = gt_bboxes_3d[..., 3]  # TODO: use variable
         # gt_bboxes_3d[..., 4] = gt_bboxes_3d[..., 4]
-        center_x = ((gt_bboxes_3d[..., 3] - xs))/ (self.std_3d[0])#*512/375)
-        center_y = ((gt_bboxes_3d[..., 4] - ys))/ (self.std_3d[1])#*512/375)
+        center_x = ((gt_bboxes_3d[..., 3] - xs)/ (self.std_3d[0]*1.365) - 0.016801083)/0.6852198
+        center_y = ((gt_bboxes_3d[..., 4] - ys)/ (self.std_3d[1]*1.365) + 0.03962014)/0.38124686
 
         gt_bboxes_3d = torch.stack((gt_bboxes_3d[..., 0],gt_bboxes_3d[..., 1],gt_bboxes_3d[..., 2],
                                     center_x,center_y,gt_bboxes_3d[..., 5],
@@ -585,4 +600,5 @@ class FCOSHead3D(nn.Module):
         #         top_bottom.min(dim=-1)[0] / top_bottom.max(dim=-1)[0])
         # logger.info(centerness_targets)
         # return torch.sqrt(centerness_targets)
-        return torch.sqrt(left_right * top_bottom)
+        # return torch.sqrt(left_right * top_bottom)
+        return left_right * top_bottom

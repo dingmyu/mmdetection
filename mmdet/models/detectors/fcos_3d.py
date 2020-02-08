@@ -38,8 +38,13 @@ class FCOS3D(SingleStageDetector):
         bbox_inputs = outs + (img_meta, self.test_cfg, rescale)
         bbox_list = self.bbox_head.get_bboxes(*bbox_inputs)
 
+        trans = [ 1.5319942,    1.6342136,    3.8970344]
+
         for i_3d in range(8):
             bbox_list[0][1][:, i_3d] = bbox_list[0][1][:, i_3d] * self.test_cfg['std_3d'][i_3d] + self.test_cfg['mean_3d'][i_3d]
+
+        for i_3d in range(3):
+            bbox_list[0][1][:, i_3d] = torch.exp(bbox_list[0][1][:, i_3d]) * trans[i_3d]
 
         calib_inv = calib[0].inverse()
         x = bbox_list[0][1][:, 3]

@@ -245,7 +245,8 @@ class Dilated_ResNeXt(ResNet):
                 m.dilation, m.padding, m.stride = (2, 2), (2, 2), (1, 1)
             elif 'downsample.0' in n:
                 m.stride = (1, 1)
-
+        self.dropout_channel = nn.Dropout2d(p=0.3)
+        self.dropout = nn.Dropout(p=0.5)
         self._freeze_stages()
 
     def forward(self, x):
@@ -254,9 +255,15 @@ class Dilated_ResNeXt(ResNet):
         x = self.relu(x)
         x = self.maxpool(x)
         # outs = []
-        for i, layer_name in enumerate(self.res_layers):
+        for i, layer_name in enumerate(self.res_layers[:-1]):
             res_layer = getattr(self, layer_name)
             x = res_layer(x)
+
+        x = self.dropout_channel(x)
+        for layer_name in self.res_layers[-1:]:
+            res_layer = getattr(self, layer_name)
+            x = res_layer(x)
+        x = self.dropout(x)
             # if i in self.out_indices:
             #     outs.append(x)
         return tuple([x])

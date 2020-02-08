@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from ..registry import LOSSES
 from .utils import weighted_loss
-
+import torch.nn.functional as F
 
 @weighted_loss
 def smooth_l1_loss(pred, target, beta=1.0):
@@ -34,6 +34,9 @@ class SmoothL1Loss(nn.Module):
         assert reduction_override in (None, 'none', 'mean', 'sum')
         reduction = (
             reduction_override if reduction_override else self.reduction)
+        # loss_bbox = F.smooth_l1_loss(pred, target, reduction='none')
+        # loss_bbox = (loss_bbox.sum(1) * weight).mean()
+        weight = None
         loss_bbox = self.loss_weight * smooth_l1_loss(
             pred,
             target,

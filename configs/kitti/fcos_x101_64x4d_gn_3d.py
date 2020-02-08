@@ -2,7 +2,7 @@
 import datetime
 
 
-total_epochs = 24
+total_epochs = 50
 checkpoint_config = dict(interval=10)
 evaluation = dict(interval=1)
 workflow = [('train', 1)]
@@ -47,7 +47,7 @@ model = dict(
         type='FCOSHead3D',
         num_classes=4,
         in_channels=2048,
-        stacked_convs=1,
+        stacked_convs=2,
         feat_channels=512,
         strides=[16,],
         loss_cls=dict(
@@ -57,12 +57,12 @@ model = dict(
             alpha=0.25,
             loss_weight=1.0),
         loss_bbox=dict(type='IoULoss', loss_weight=1.0),
-        loss_bbox_3d=dict(type='SmoothL1Loss', loss_weight=1.0),
+        loss_bbox_3d=dict(type='SmoothL1Loss', beta=1.0/9.0, loss_weight=2.0),
         loss_centerness=dict(
             #type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0)))
-            type='SmoothL1Loss', loss_weight=1.0),
+            type='SmoothL1Loss', beta=1.0/9.0, loss_weight=1.0),
         norm_cfg=dict(type='GN', num_groups=32, requires_grad=True),
-        std_3d = [73.31452, 29.732836]
+        std_3d = [123.62374/2, 113.182/2]
     ))
 # training and testing settings
 train_cfg = dict(
@@ -80,8 +80,8 @@ test_cfg = dict(
     nms_pre=1000,
     min_bbox_size=0,
     score_thr=0.5,
-    mean_3d=[1.566141, 1.4557937, 3.393441, 0, 0, 26.497492, -0.07895348, -0.0881019],
-    std_3d = [0.15824416, 0.39049828, 1.1481832, 1, 1, 16.059835, 1.7272873, 1.795999],
+    mean_3d= [-0.00378265,  -0.00182043,  -0.00622482, 0, 0, 26.235588,  -0.04752721,  -0.02627299],
+    std_3d = [0.08565227,   0.06028508,   0.11255758, 1, 1, 12.873396,  1.6905682,  1.7750752],
     nms=dict(type='nms', iou_thr=0.4),
     max_per_img=100,
     stat_2d=stat_2d)

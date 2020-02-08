@@ -38,9 +38,15 @@ sys.dont_write_bytecode = True
 sys.path.append(os.getcwd())
 np.set_printoptions(suppress=True)
 
-mean_3d = [ 1.566141,    1.4557937,   3.393441,  0, 0, 26.497492, -0.07895348,  -0.0881019]
-std_3d = [ 0.15824416,   0.39049828,   1.1481832, 1, 1, 16.059835,1.7272873,  1.795999]
+mean_3d = [ 1.5319942,    1.6342136,    3.8970344,  1.0385063, -2.2421432, 26.235588,  -0.04752721,  -0.02627299]
+std_3d = [ 0.13790289,   0.09824956,   0.42854765, 42.354717, 21.57514, 12.873396,  1.6905682,  1.7750752]
+Aw = 123.62374/2  # 69.16813
+Ah = 113.182/2  # 51.076797]
 
+# trans_mean = [-0.00378265,  -0.00182043,  -0.00622482, 0.016801083, -0.03962014, 26.235588,  -0.04752721,  -0.02627299]
+# trans_std = [0.08565227,   0.06028508,   0.11255758, 0.6852198, 0.38124686, 12.873396,  1.6905682,  1.7750752]
+trans_mean = [-0.00378265,  -0.00182043,  -0.00622482, 0, 0, 26.235588,  -0.04752721,  -0.02627299]
+trans_std = [0.08565227,   0.06028508,   0.11255758, 1, 1, 12.873396,  1.6905682,  1.7750752]
 
 def read_kitti_cal(calfile):
     """
@@ -263,8 +269,14 @@ def read_kitti_label(file, calib, dataset):
             alpha = convertRot2Alpha(rotY, cz3d, cx3d)
             obj.bbox_3d = [h3d, w3d, l3d, x_p, y_p, z_p, rotY, alpha]
 
+            # for i in range(8):
+            #     obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
+
+            for i in range(3):
+                obj.bbox_3d[i] = np.log(obj.bbox_3d[i]/mean_3d[i])
+
             for i in range(8):
-                obj.bbox_3d[i] = (obj.bbox_3d[i] - mean_3d[i]) / std_3d[i]
+                obj.bbox_3d[i] = (obj.bbox_3d[i] - trans_mean[i]) / trans_std[i]
 
             obj.bbox_2d = [x, y, x2, y2]
             obj.label = label_type

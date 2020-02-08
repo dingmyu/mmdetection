@@ -208,7 +208,7 @@ def bbox2result(bboxes, labels, num_classes, bboxes_3d=None):
             return [bboxes[labels == i, :] for i in range(num_classes - 1)]
 
 
-def distance2bbox(points, distance, max_shape=None):
+def distance2bbox(points, distance, std_3d, max_shape=None):
     """Decode distance prediction to bounding box.
 
     Args:
@@ -220,10 +220,10 @@ def distance2bbox(points, distance, max_shape=None):
     Returns:
         Tensor: Decoded bboxes.
     """
-    x1 = points[:, 0] - distance[:, 0]
-    y1 = points[:, 1] - distance[:, 1]
-    x2 = points[:, 0] + distance[:, 2]
-    y2 = points[:, 1] + distance[:, 3]
+    x1 = points[:, 0] - distance[:, 0] * std_3d[0]*1.365
+    y1 = points[:, 1] - distance[:, 1] * std_3d[1]*1.365
+    x2 = points[:, 0] + distance[:, 2] * std_3d[0]*1.365
+    y2 = points[:, 1] + distance[:, 3] * std_3d[1]*1.365
     if max_shape is not None:
         x1 = x1.clamp(min=0, max=max_shape[1] - 1)
         y1 = y1.clamp(min=0, max=max_shape[0] - 1)
@@ -243,6 +243,6 @@ def distance2center(points, distance, std_3d):
     Returns:
         Tensor: Decoded bboxes.
     """
-    distance[:, 3] = points[:, 0] + distance[:, 3] * (std_3d[0])#*512/375)  # TODO: use variable
-    distance[:, 4] = points[:, 1] + distance[:, 4] * (std_3d[1])#*512/375)
+    distance[:, 3] = points[:, 0] + (distance[:, 3] * 0.6852198 + 0.016801083) * std_3d[0]*1.365 # TODO: use variable
+    distance[:, 4] = points[:, 1] + (distance[:, 4] * 0.38124686 - 0.03962014) * std_3d[1]*1.365
     return distance
