@@ -2,13 +2,13 @@
 import datetime
 
 
-total_epochs = 50
+total_epochs = 200
 checkpoint_config = dict(interval=10)
 evaluation = dict(interval=1)
 workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'
-name = '3D_BASELINE'
+name = 'FINAL'
 
 card = 8
 pretrain = True
@@ -17,6 +17,7 @@ channels = 3
 
 if pretrain:
     load_from = '/mnt/lustre/dingmingyu/2020/mmdetection/work_dirs/20200128_011929_2D_baseline_lr_0.001_nms_0.4_epoch_12/epoch_12.pth'
+    # load_from = './output/fcos_x101_64x4d_gn_coco/20200208_010041_2D_baseline_lr_0.001_nms_0.4_epoch_10/latest.pth'
 else:
     load_from = None
 resume_from = None

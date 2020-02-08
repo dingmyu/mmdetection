@@ -220,10 +220,10 @@ def distance2bbox(points, distance, std_3d, max_shape=None):
     Returns:
         Tensor: Decoded bboxes.
     """
-    x1 = points[:, 0] - distance[:, 0] * std_3d[0]*1.365
-    y1 = points[:, 1] - distance[:, 1] * std_3d[1]*1.365
-    x2 = points[:, 0] + distance[:, 2] * std_3d[0]*1.365
-    y2 = points[:, 1] + distance[:, 3] * std_3d[1]*1.365
+    x1 = points[:, 0] - (distance[:, 0]+1) * std_3d[0]*1.365
+    y1 = points[:, 1] - (distance[:, 1]+1) * std_3d[1]*1.365
+    x2 = points[:, 0] + (distance[:, 2]+1) * std_3d[0]*1.365
+    y2 = points[:, 1] + (distance[:, 3]+1) * std_3d[1]*1.365
     if max_shape is not None:
         x1 = x1.clamp(min=0, max=max_shape[1] - 1)
         y1 = y1.clamp(min=0, max=max_shape[0] - 1)
