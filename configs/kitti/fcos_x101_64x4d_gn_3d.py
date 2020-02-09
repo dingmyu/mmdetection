@@ -2,9 +2,9 @@
 import datetime
 
 
-total_epochs = 200
+total_epochs = 50
 checkpoint_config = dict(interval=10)
-evaluation = dict(interval=1)
+evaluation = dict(interval=5)
 workflow = [('train', 1)]
 dist_params = dict(backend='nccl', port=9899)
 log_level = 'INFO'

@@ -232,6 +232,9 @@ class FCOSHead3D(nn.Module):
 
         pos_inds = flatten_labels.nonzero().reshape(-1)
         num_pos = len(pos_inds)
+        # from mmdet.apis import get_root_logger
+        # logger = get_root_logger()
+        # logger.info(num_pos)
         loss_cls = self.loss_cls(
             flatten_cls_scores, flatten_labels,
             avg_factor=num_pos + num_imgs)  # avoid num_pos is 0
@@ -242,8 +245,8 @@ class FCOSHead3D(nn.Module):
 
 
         # check NaN and Inf
-        assert torch.isfinite(flatten_cls_scores).all().item(), \
-            'classification scores become infinite or NaN!'
+        # assert torch.isfinite(flatten_cls_scores).all().item(), \
+        #     'classification scores become infinite or NaN!'
         assert torch.isfinite(pos_bbox_preds).all().item(), \
             'bbox predications become infinite or NaN!'
         assert torch.isfinite(pos_bbox_preds_3d).all().item(), \
@@ -562,6 +565,16 @@ class FCOSHead3D(nn.Module):
         bbox_center_3d = torch.stack((left, top, right, bottom), -1)
         # print(bbox_center_3d.size(), bbox_center_3d)  # torch.Size([3392, 5, 4]) tensor([[[56.3121, 39.2054, 48.3832, 47.5418],
 
+        left = torch.stack((bbox_center_2d[..., 0], bbox_center_3d[..., 0]), -1)
+        right = torch.stack((bbox_center_2d[..., 2], bbox_center_3d[..., 2]), -1)
+        top = torch.stack((bbox_center_2d[..., 1], bbox_center_3d[..., 1]), -1)
+        bottom = torch.stack((bbox_center_2d[..., 3], bbox_center_3d[..., 3]), -1)
+
+        left_right = (left.min(dim=-1)[0] / left.max(dim=-1)[0]) * (right.min(dim=-1)[0] / right.max(dim=-1)[0])
+        top_bottom = (top.min(dim=-1)[0] / top.max(dim=-1)[0]) * (bottom.min(dim=-1)[0] / bottom.max(dim=-1)[0])
+
+        # areas = left_right * top_bottom
+        inside_gt_center_mask =  (left_right * top_bottom > 0.3)
 
         # from mmdet.apis import get_root_logger
         # logger = get_root_logger()
@@ -602,7 +615,7 @@ class FCOSHead3D(nn.Module):
         # if there are still more than one objects for a location,
         # we choose the one with minimal area
         areas[inside_gt_bbox_mask == 0] = INF
-        # areas[inside_gt_center_mask == 0] = INF
+        areas[inside_gt_center_mask == 0] = INF
         areas[inside_regress_range == 0] = INF
         # print(gt_bboxes_3d[..., -3].size(), gt_bboxes_3d[..., -3].mean(0))  torch.Size([3392, 3]) tensor([-1.1724, -1.5243, -0.3568], device='cuda:0')
         min_area, min_area_inds = areas.min(dim=1)  # TODO: max or min

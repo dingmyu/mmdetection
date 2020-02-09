@@ -4,7 +4,6 @@
     <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -95,7 +94,7 @@
       <workItem from="1580448265351" duration="3168000" />
       <workItem from="1580459771241" duration="2962000" />
       <workItem from="1580463019343" duration="14155000" />
-      <workItem from="1580527161266" duration="82414000" />
+      <workItem from="1580527161266" duration="86650000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Import.">
       <created>1576574849894</created>
@@ -279,7 +278,14 @@
       <option name="project" value="LOCAL" />
       <updated>1581147495161</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="3d check.">
+      <created>1581184897440</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1581184897440</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
