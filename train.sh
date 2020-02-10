@@ -9,5 +9,6 @@ percard=8
 #srun -p ad_lidar --gres=gpu:$percard --ntasks=$card --ntasks-per-node=$percard --cpus-per-task=5 --kill-on-bad-exit=1 python -u tools/train.py configs/kitti/faster_rcnn_x101_64x4d_fpn_1x.py --launcher="slurm" --validate
 #srun -p ad_lidar --gres=gpu:$percard --ntasks=$card --ntasks-per-node=$percard --cpus-per-task=5 --kill-on-bad-exit=1 python -u tools/train.py configs/kitti/retinanet_x101_64x4d_fpn_1x.py --launcher="slurm" --validate
 
+#srun -p ad_lidar -x SH-IDC1-10-5-36-213 --gres=gpu:$percard --ntasks=$card --ntasks-per-node=$percard --cpus-per-task=5 --kill-on-bad-exit=1 python -u tools/train.py configs/kitti/faster_rcnn_x101_64x4d_fpn_3d.py --launcher="slurm" --validate --timestamp $time
 
 srun -p ad_lidar -x SH-IDC1-10-5-36-213 --gres=gpu:$percard --ntasks=$card --ntasks-per-node=$percard --cpus-per-task=5 --kill-on-bad-exit=1 python -u tools/train.py configs/kitti/fcos_x101_64x4d_gn_3d.py --launcher="slurm" --validate --timestamp $time

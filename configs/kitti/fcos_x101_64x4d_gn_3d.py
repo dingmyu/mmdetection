@@ -91,7 +91,7 @@ dataset_type = 'Kitti3dDataset'
 data_root = 'kitti_tools/split1/'
 if channels == 5:
     img_norm_cfg = dict(
-        mean=[123.675, 116.28, 103.53, 133.56860548, 91.18909286], std=[58.395, 57.12, 57.375, 35.72057158, 33.77605146], to_rgb=True)  # RGB + 2d_wh
+        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)  # RGB + 2d_wh
 else:
     img_norm_cfg = dict(
         mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)

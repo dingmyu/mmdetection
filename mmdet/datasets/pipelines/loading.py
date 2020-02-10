@@ -24,10 +24,10 @@ class LoadImageFromFile(object):
         img = mmcv.imread(filename)
         if self.to_float32:
             img = img.astype(np.float32)
-        if self.channels == 5:
-            stat = cv2.imread('kitti_tools/stat/stat_2d.png').astype(np.float32)
+        if self.channels == 6:
+            stat = np.load('kitti_tools/stat/stat.npy').astype(np.float32)
             stat = cv2.resize(stat, (img.shape[1],img.shape[0])).astype(np.float32)
-            img = np.concatenate((img, stat[:,:,1:3]), axis=2)
+            img = np.concatenate((img, stat), axis=2)
         results['filename'] = filename
         results['img'] = img
         results['img_shape'] = img.shape

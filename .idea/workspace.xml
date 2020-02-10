@@ -4,7 +4,11 @@
     <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/datasets/pipelines/loading.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/pipelines/loading.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/datasets/pipelines/transforms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/datasets/pipelines/transforms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/models/anchor_heads/anchor_head.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/anchor_heads/anchor_head.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train.sh" beforeDir="false" afterPath="$PROJECT_DIR$/train.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -42,23 +46,23 @@
     <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/configs" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/mmdet/models/detectors" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/configs" />
-      <recent name="$PROJECT_DIR$/kitti_tools/stat" />
-      <recent name="$PROJECT_DIR$/mmdet/models/anchor_heads" />
-      <recent name="$PROJECT_DIR$/old_version" />
-      <recent name="$PROJECT_DIR$/configs/kitti" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/configs/3d_fcos.py" />
       <recent name="$PROJECT_DIR$/old_version/config" />
       <recent name="$PROJECT_DIR$/mmcv/runner/hooks" />
       <recent name="$PROJECT_DIR$/kitti_tools" />
       <recent name="$PROJECT_DIR$/configs/kitti" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/mmdet/models/detectors" />
+      <recent name="$PROJECT_DIR$/configs/kitti" />
+      <recent name="$PROJECT_DIR$/configs" />
+      <recent name="$PROJECT_DIR$/kitti_tools/stat" />
+      <recent name="$PROJECT_DIR$/mmdet/models/anchor_heads" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -94,7 +98,8 @@
       <workItem from="1580448265351" duration="3168000" />
       <workItem from="1580459771241" duration="2962000" />
       <workItem from="1580463019343" duration="14155000" />
-      <workItem from="1580527161266" duration="86650000" />
+      <workItem from="1580527161266" duration="87978000" />
+      <workItem from="1581314165050" duration="10990000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Import.">
       <created>1576574849894</created>
@@ -285,7 +290,14 @@
       <option name="project" value="LOCAL" />
       <updated>1581184897440</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="mask more points.">
+      <created>1581236758469</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1581236758469</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -324,7 +336,8 @@
     <MESSAGE value="Fix data." />
     <MESSAGE value="Fix data transform." />
     <MESSAGE value="3d check." />
-    <option name="LAST_COMMIT_MESSAGE" value="3d check." />
+    <MESSAGE value="mask more points." />
+    <option name="LAST_COMMIT_MESSAGE" value="mask more points." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
