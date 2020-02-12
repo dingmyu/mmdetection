@@ -111,7 +111,7 @@ def bbox_target_single_3d(pos_bboxes,
         bbox_weights_3d[:num_pos, :] = 1
     if num_neg > 0:
         label_weights[-num_neg:] = 1.0
-
+    # print(labels.size(), label_weights.size(), bbox_targets.size(), bbox_targets_3d.size(), bbox_weights.size(), bbox_weights_3d.size())  # torch.Size([512]) torch.Size([512]) torch.Size([512, 4]) torch.Size([512, 8]) torch.Size([512, 4]) torch.Size([512, 8])
     return labels, label_weights, bbox_targets, bbox_targets_3d, bbox_weights, bbox_weights_3d
 
 def expand_target(bbox_targets, bbox_weights, labels, num_classes):

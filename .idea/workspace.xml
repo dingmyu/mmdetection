@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="add stats">
+    <list default="true" id="9ada9b96-8ac4-4467-8e2b-3682101199cf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/configs/kitti/fcos_x101_64x4d_gn_3d.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/bbox_target.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/bbox_target.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/samplers/base_sampler.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/samplers/base_sampler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/samplers/sampling_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/samplers/sampling_result.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/core/bbox/transforms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/models/anchor_heads/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/anchor_heads/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/anchor_heads/fcos_head_3d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/models/bbox_heads/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/bbox_heads/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/models/detectors/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/detectors/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/models/detectors/test_mixins.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/detectors/test_mixins.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mmdet/models/losses/smooth_l1_loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/losses/smooth_l1_loss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmdet/models/bbox_heads/convfc_bbox_head_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmdet/models/bbox_heads/convfc_bbox_head_3d.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train.sh" beforeDir="false" afterPath="$PROJECT_DIR$/train.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -105,7 +97,7 @@
       <workItem from="1580459771241" duration="2962000" />
       <workItem from="1580463019343" duration="14155000" />
       <workItem from="1580527161266" duration="87978000" />
-      <workItem from="1581314165050" duration="42707000" />
+      <workItem from="1581314165050" duration="52455000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Import.">
       <created>1576574849894</created>
@@ -310,7 +302,14 @@
       <option name="project" value="LOCAL" />
       <updated>1581349902780</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="ADD faster-rcnn-3d">
+      <created>1581491761986</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1581491761986</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -351,7 +350,8 @@
     <MESSAGE value="3d check." />
     <MESSAGE value="mask more points." />
     <MESSAGE value="add stats" />
-    <option name="LAST_COMMIT_MESSAGE" value="add stats" />
+    <MESSAGE value="ADD faster-rcnn-3d" />
+    <option name="LAST_COMMIT_MESSAGE" value="ADD faster-rcnn-3d" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

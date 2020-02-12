@@ -89,6 +89,10 @@ class SharedFCBBoxHead3D(ConvFCBBoxHead):
         # print(pos_gt_bboxes[0].size(), pos_gt_bboxes_3d[0].size())
         pos_gt_labels = [res.pos_gt_labels for res in sampling_results]
         reg_classes = 1 if self.reg_class_agnostic else self.num_classes
+        # from mmdet.apis import get_root_logger
+        # logger = get_root_logger()
+        # logger.info('pos_gt_bboxes{}'.format(pos_gt_bboxes))
+        # logger.info('pos_gt_bboxes_3d{}'.format(pos_gt_bboxes_3d[:2]))  # [[ 5.5125e-01,  9.7504e-01, -5.9984e-01,  3.7557e+02,  3.5705e+02, -1.3744e+00,  8.6807e-01,  1.0626e+00],
         cls_reg_targets = bbox_target(
             pos_proposals,
             neg_proposals,
@@ -99,6 +103,7 @@ class SharedFCBBoxHead3D(ConvFCBBoxHead):
             target_means=self.target_means,
             target_stds=self.target_stds,
             pos_gt_bboxes_3d=pos_gt_bboxes_3d)
+        # logger.info('cls_reg_targets{}'.format(cls_reg_targets[3][:2]))
         return cls_reg_targets
 
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))
@@ -151,6 +156,12 @@ class SharedFCBBoxHead3D(ConvFCBBoxHead):
                     pos_bbox_pred_3d = bbox_pred_3d.view(bbox_pred_3d.size(0), -1,
                                                          8)[pos_inds,
                                                             labels[pos_inds]]
+                # from mmdet.apis import get_root_logger
+                # logger = get_root_logger()
+                # logger.info('pos_bbox_pred_3d{}'.format(pos_bbox_pred_3d))
+                # logger.info('bbox_targets_3d{}'.format(bbox_targets_3d[pos_inds]))
+                # logger.info('bbox_weights_3d{}'.format(bbox_weights_3d[pos_inds]))
+
                 losses['loss_bbox_3d'] = self.loss_bbox_3d(
                     pos_bbox_pred_3d,
                     bbox_targets_3d[pos_inds],
@@ -188,8 +199,10 @@ class SharedFCBBoxHead3D(ConvFCBBoxHead):
                 bboxes /= scale_factor
                 # from mmdet.apis import get_root_logger
                 # logger = get_root_logger()
+                # logger.info('2d_{}'.format(bboxes[:10, :]))
                 # logger.info('old_{}'.format(bboxes_3d[:10, 2:6]))
-                bboxes_3d[:, 3:5] /= scale_factor
+                bboxes_3d[:, 3::8] /= scale_factor
+                bboxes_3d[:, 4::8] /= scale_factor
                 # logger.info('new_{}'.format(bboxes_3d[:10, 2:6]))
             else:
                 scale_factor = torch.from_numpy(scale_factor).to(bboxes.device)
