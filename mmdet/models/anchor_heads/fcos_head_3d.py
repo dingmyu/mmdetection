@@ -196,6 +196,8 @@ class FCOSHead3D(nn.Module):
             # logger = get_root_logger()
             stat = np.load('kitti_tools/stat/stat.npy').astype(np.float32)
             stat = cv2.resize(stat, (106, 32)).astype(np.float32)
+            # stat = cv2.resize(stat, (4, 4)).astype(np.float32)
+            # stat = cv2.resize(stat, (106, 32), interpolation=cv2.INTER_NEAREST).astype(np.float32)
             # std = np.std(stat, axis=(0, 1))
             # stat /= std
             z_stat = torch.from_numpy(stat[:,:,0]).float().cuda().unsqueeze(0)
@@ -204,7 +206,7 @@ class FCOSHead3D(nn.Module):
             stat_all = torch.cat([w_stat, h_stat, w_stat, h_stat], dim = 0)
             # logger.info('old_{}'.format(bbox_preds_3d[0][0, :, 20:25, 20]))
             for bbox_pred_3d in bbox_preds_3d:
-                bbox_pred_3d[:, 5:6, :, :] = bbox_pred_3d[:, 5:6, :, :] * z_stat
+                bbox_pred_3d[:, 5:6, :, :] = bbox_pred_3d[:, 5:6, :, :] + z_stat
             bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]  # torch.exp(bbox_pred)
             # logger.info('new_{}'.format(bbox_preds_3d[0][0, :, 20:25, 20]))
         flatten_bbox_preds = [
@@ -368,6 +370,8 @@ class FCOSHead3D(nn.Module):
         if cfg.stat_2d:
             stat = np.load('kitti_tools/stat/stat.npy').astype(np.float32)
             stat = cv2.resize(stat, (106, 32)).astype(np.float32)
+            # stat = cv2.resize(stat, (4, 4)).astype(np.float32)
+            # stat = cv2.resize(stat, (106, 32), interpolation=cv2.INTER_NEAREST).astype(np.float32)
             # std = np.std(stat, axis=(0, 1))
             # stat /= std
             z_stat = torch.from_numpy(stat[:,:,0]).float().cuda().unsqueeze(0)
@@ -375,7 +379,7 @@ class FCOSHead3D(nn.Module):
             h_stat = torch.from_numpy(stat[:,:,2]).float().cuda().unsqueeze(0)
             stat_all = torch.cat([w_stat, h_stat, w_stat, h_stat], dim = 0)
             for bbox_pred_3d in bbox_preds_3d:
-                bbox_pred_3d[5:6, :, :] = bbox_pred_3d[5:6, :, :] * z_stat
+                bbox_pred_3d[5:6, :, :] = bbox_pred_3d[5:6, :, :] + z_stat
             bbox_preds = [bbox_pred * stat_all for bbox_pred in bbox_preds]  # torch.exp(bbox_pred)
         for cls_score, bbox_pred, bbox_pred_3d,centerness, points in zip(
                 cls_scores, bbox_preds, bbox_preds_3d, centernesses, mlvl_points):

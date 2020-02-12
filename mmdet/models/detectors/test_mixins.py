@@ -99,24 +99,42 @@ class BBoxTestMixin(object):
                            img_meta,
                            proposals,
                            rcnn_test_cfg,
-                           rescale=False):
+                           rescale=False,
+                           flag_3d=False):
         """Test only det bboxes without augmentation."""
         rois = bbox2roi(proposals)
         roi_feats = self.bbox_roi_extractor(
             x[:len(self.bbox_roi_extractor.featmap_strides)], rois)
-        if self.with_shared_head:
+        if self.with_shared_head:  # None
             roi_feats = self.shared_head(roi_feats)
-        cls_score, bbox_pred = self.bbox_head(roi_feats)
-        img_shape = img_meta[0]['img_shape']
-        scale_factor = img_meta[0]['scale_factor']
-        det_bboxes, det_labels = self.bbox_head.get_det_bboxes(
-            rois,
-            cls_score,
-            bbox_pred,
-            img_shape,
-            scale_factor,
-            rescale=rescale,
-            cfg=rcnn_test_cfg)
+        if not flag_3d:
+            cls_score, bbox_pred = self.bbox_head(roi_feats)
+            img_shape = img_meta[0]['img_shape']
+            scale_factor = img_meta[0]['scale_factor']
+            det_bboxes, det_labels = self.bbox_head.get_det_bboxes(
+                rois,
+                cls_score,
+                bbox_pred,
+                img_shape,
+                scale_factor,
+                rescale=rescale,
+                cfg=rcnn_test_cfg)
+        else:
+            cls_score, bbox_pred, bbox_pred_3d = self.bbox_head(roi_feats)
+            # print(cls_score.size(), bbox_pred.size(), bbox_pred_3d.size()) # torch.Size([1000, 4]) torch.Size([1000, 16]) torch.Size([1000, 32])
+            img_shape = img_meta[0]['img_shape']
+            scale_factor = img_meta[0]['scale_factor']
+            det_bboxes, det_bboxes_3d, det_labels = self.bbox_head.get_det_bboxes(
+                rois,
+                cls_score,
+                bbox_pred,
+                bbox_pred_3d,
+                img_shape,
+                scale_factor,
+                rescale=rescale,
+                cfg=rcnn_test_cfg)
+            # print(det_bboxes, det_bboxes_3d, det_labels)
+            return det_bboxes, det_bboxes_3d, det_labels
         return det_bboxes, det_labels
 
     def aug_test_bboxes(self, feats, img_metas, proposal_list, rcnn_test_cfg):

@@ -36,7 +36,6 @@ class SmoothL1Loss(nn.Module):
             reduction_override if reduction_override else self.reduction)
         # loss_bbox = F.smooth_l1_loss(pred, target, reduction='none')
         # loss_bbox = (loss_bbox.sum(1) * weight).mean()
-        weight = None
         loss_bbox = self.loss_weight * smooth_l1_loss(
             pred,
             target,

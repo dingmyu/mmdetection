@@ -11,10 +11,11 @@ from .reppoints_head import RepPointsHead
 from .retina_head import RetinaHead
 from .retina_sepbn_head import RetinaSepBNHead
 from .rpn_head import RPNHead
+from .rpn_head_3d import RPNHead3D
 from .ssd_head import SSDHead
 
 __all__ = [
-    'AnchorHead', 'GuidedAnchorHead', 'FeatureAdaption', 'RPNHead',
+    'AnchorHead', 'GuidedAnchorHead', 'FeatureAdaption', 'RPNHead', 'RPNHead3D',
     'GARPNHead', 'RetinaHead', 'RetinaSepBNHead', 'GARetinaHead', 'SSDHead',
     'FCOSHead', 'RepPointsHead', 'FoveaHead', 'FreeAnchorRetinaHead', 'FCOSHead3D', 'FCOSHead2D'
 ]

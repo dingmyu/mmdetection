@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 
-def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
+def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1], gt_3d=None):
     assert proposals.size() == gt.size()
 
     proposals = proposals.float()
@@ -27,7 +27,17 @@ def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     means = deltas.new_tensor(means).unsqueeze(0)
     stds = deltas.new_tensor(stds).unsqueeze(0)
     deltas = deltas.sub_(means).div_(stds)
-
+    if gt_3d is not None:
+        gt_3d = gt_3d.float()
+        gx = gt_3d[..., 3]
+        gy = gt_3d[..., 4]
+        dx = (gx - px) / pw
+        dy = (gy - py) / ph
+        deltas_3d = torch.stack([gt_3d[..., 0], gt_3d[..., 1], gt_3d[..., 2], dx, dy, gt_3d[..., 5], gt_3d[..., 6], gt_3d[..., 7]], dim=-1)
+        means = torch.cat([means, means], dim=1)
+        stds = torch.cat([stds, stds], dim=1)
+        deltas_3d = deltas_3d.sub_(means).div_(stds)
+        return deltas, deltas_3d
     return deltas
 
 
@@ -36,6 +46,7 @@ def delta2bbox(rois,
                means=[0, 0, 0, 0],
                stds=[1, 1, 1, 1],
                max_shape=None,
+               deltas_3d=None,
                wh_ratio_clip=16 / 1000):
     """
     Apply deltas to shift/scale base boxes.
@@ -108,6 +119,19 @@ def delta2bbox(rois,
         x2 = x2.clamp(min=0, max=max_shape[1] - 1)
         y2 = y2.clamp(min=0, max=max_shape[0] - 1)
     bboxes = torch.stack([x1, y1, x2, y2], dim=-1).view_as(deltas)
+    if deltas_3d is not None:
+        means = torch.cat([means, means], dim=1)
+        stds = torch.cat([stds, stds], dim=1)
+        denorm_deltas_3d = deltas_3d * stds + means
+        # print(denorm_deltas_3d.size())  # torch.Size([1000, 32])
+        dx = denorm_deltas_3d[:, 3::8]
+        dy = denorm_deltas_3d[:, 4::8]
+        gx = torch.addcmul(px, 1, pw, dx)  # gx = px + pw * dx
+        gy = torch.addcmul(py, 1, ph, dy)  # gy = py + ph * dy
+        bboxes_3d = torch.stack([denorm_deltas_3d[:, 0::8], denorm_deltas_3d[:, 1::8], denorm_deltas_3d[:, 2::8],
+                                 gx, gy, denorm_deltas_3d[:, 5::8], denorm_deltas_3d[:, 6::8],
+                                 denorm_deltas_3d[:, 7::8]], dim=-1).view_as(deltas_3d)
+        return bboxes, bboxes_3d
     return bboxes
 
 
