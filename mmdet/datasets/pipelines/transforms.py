@@ -6,6 +6,7 @@ import numpy as np
 from albumentations import Compose
 from imagecorruptions import corrupt
 from numpy import random
+import cv2
 
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from ..registry import PIPELINES
@@ -110,14 +111,35 @@ class Resize(object):
         results['scale_idx'] = scale_idx
 
     def _resize_img(self, results):
-        if self.keep_ratio:
-            img, scale_factor = mmcv.imrescale(
-                results['img'], results['scale'], return_scale=True)
+        KITTI = True
+        if KITTI:
+            scale_factor = results['scale'][1] / results['img'].shape[0]
+
+            h = np.round(results['img'].shape[0] * scale_factor).astype(int)
+            w = np.round(results['img'].shape[1] * scale_factor).astype(int)
+
+            # resize
+            img = cv2.resize(results['img'], (w, h))
+
+            if len(results['scale']) > 1:
+
+                # crop in
+                if img.shape[1] > results['scale'][0]:
+                    img = img[:, 0:results['scale'][0], :]
+
+                # pad out
+                elif img.shape[1] < results['scale'][0]:
+                    padW = results['scale'][0] - img.shape[1]
+                    img = np.pad(img, [(0, 0), (0, padW), (0, 0)], 'constant')
         else:
-            img, w_scale, h_scale = mmcv.imresize(
-                results['img'], results['scale'], return_scale=True)
-            scale_factor = np.array([w_scale, h_scale, w_scale, h_scale],
-                                    dtype=np.float32)
+            if self.keep_ratio:
+                img, scale_factor = mmcv.imrescale(
+                    results['img'], results['scale'], return_scale=True)
+            else:
+                img, w_scale, h_scale = mmcv.imresize(
+                    results['img'], results['scale'], return_scale=True)
+                scale_factor = np.array([w_scale, h_scale, w_scale, h_scale],
+                                        dtype=np.float32)
         results['img'] = img
         results['img_shape'] = img.shape
         results['pad_shape'] = img.shape  # in case that there is no padding
